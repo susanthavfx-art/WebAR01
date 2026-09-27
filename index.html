@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071b2a">
+  <title>Elasmo AR — Ocean Discovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    :root{--navy:#071b2a;--sea:#0d3344;--mint:#b7f3dc;--lime:#c9ef73;--white:#f2f7f5;--muted:#9eb7bd;--line:#ffffff24}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif}
+    a{color:var(--mint)}.scene-wrap{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,#125067 0,#071b2a 70%)}
+    a-scene{position:absolute!important;inset:0;width:100%;height:100%;z-index:1}a-scene canvas{display:block}
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:5;padding:calc(env(safe-area-inset-top) + 17px) 22px 14px;display:flex;align-items:center;justify-content:space-between;pointer-events:none;background:linear-gradient(#071b2acc,transparent)}
+    .brand{display:flex;align-items:center;gap:11px}.brand-mark{width:34px;height:34px;border:1px solid #b7f3dc77;border-radius:12px;display:grid;place-items:center;color:var(--mint);font-size:17px;background:#b7f3dc12}.brand-name{font:700 15px 'Space Grotesk';letter-spacing:.015em}.brand-sub{font-size:10px;color:#a5c2c5;letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
+    .live-pill{border:1px solid #b7f3dc4a;border-radius:30px;padding:8px 12px;color:#d5f4e6;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:#071b2a8a;display:flex;align-items:center;gap:7px}.dot{width:7px;height:7px;border-radius:50%;background:#c9ef73;box-shadow:0 0 11px #c9ef73}
+    .bottom-panel{position:fixed;z-index:5;left:0;right:0;bottom:0;padding:48px 22px calc(env(safe-area-inset-bottom) + 22px);background:linear-gradient(transparent,#061722ee 25%,#061722 70%);display:flex;flex-direction:column;align-items:center;text-align:center;transition:opacity .25s}
+    .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--mint);font-weight:700;margin-bottom:9px}.headline{font:600 clamp(25px,6vw,34px)/1.05 'Space Grotesk';letter-spacing:-.045em;margin:0 0 9px}.subtitle{max-width:350px;color:#afc5ca;font-size:13px;line-height:1.55;margin:0 0 20px}
+    .primary{border:0;border-radius:15px;padding:15px 22px;min-width:210px;background:var(--lime);color:#11232a;font:700 14px 'DM Sans';box-shadow:0 8px 30px #b5df5c2b;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s,filter .15s}.primary:hover{filter:brightness(1.05);transform:translateY(-1px)}.primary:disabled{opacity:.55;cursor:wait}.button-icon{font-size:18px}
+    .help{border:0;background:none;color:#b7d2d4;font:500 12px 'DM Sans';margin-top:13px;padding:8px;cursor:pointer}.status{font-size:12px;color:#d1eee2;margin-top:13px;min-height:18px}.hide{display:none!important}
+    .scanner-frame{position:fixed;z-index:3;left:50%;top:46%;transform:translate(-50%,-50%);width:min(74vw,310px);aspect-ratio:1;border:1px solid #c9ef7370;border-radius:25px;pointer-events:none;opacity:0;transition:opacity .35s;box-shadow:0 0 0 9999px #06172212}.scanner-frame:before,.scanner-frame:after{content:'';position:absolute;inset:-1px;border-radius:25px;border:2px solid transparent;border-top-color:var(--lime);border-left-color:var(--lime);width:27px;height:27px}.scanner-frame:after{inset:auto -1px -1px auto;border:0;border-right:2px solid var(--lime);border-bottom:2px solid var(--lime);width:27px;height:27px;border-radius:0 0 25px 0}.scanning .scanner-frame{opacity:1}
+    .tip{position:fixed;z-index:4;top:calc(46% + min(39vw,165px));left:50%;transform:translateX(-50%);width:max-content;max-width:90vw;color:#e6f4ed;background:#071b2ab8;border:1px solid #ffffff24;border-radius:30px;padding:9px 14px;font-size:11px;opacity:0;transition:opacity .3s;pointer-events:none}.scanning .tip{opacity:1}
+    .target-found .scanner-frame,.target-found .tip{opacity:0}
+    .hint-card{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);z-index:4;width:min(310px,80vw);padding:18px;border-radius:19px;text-align:center;background:#0a2330e8;border:1px solid #b7f3dc38;box-shadow:0 18px 50px #0006;pointer-events:none;display:none}.target-found .hint-card{display:block}.hint-card strong{display:block;font:600 15px 'Space Grotesk';margin:0 0 6px}.hint-card span{font-size:12px;color:#b4cbcc}
+    .modal{position:fixed;inset:0;z-index:10;background:#03111bd9;display:none;align-items:flex-end;justify-content:center;padding:20px}.modal.open{display:flex}.modal-card{max-width:460px;width:100%;background:#0b2634;border:1px solid #b7f3dc2b;border-radius:22px;padding:23px 21px 20px;box-shadow:0 20px 80px #0008}.modal-card h2{font:600 20px 'Space Grotesk';margin:0 0 10px}.modal-card p,.modal-card li{font-size:13px;line-height:1.55;color:#bdd0d1}.modal-card ol{padding-left:21px}.modal-card li{margin:8px 0}.modal-close{float:right;border:0;background:#ffffff12;color:#fff;border-radius:50%;width:31px;height:31px;font-size:18px;cursor:pointer}.model-path{font-family:monospace;color:var(--lime)!important;background:#03131d;padding:9px;border-radius:8px}
+    .toast{position:fixed;z-index:8;top:80px;left:50%;transform:translate(-50%,-12px);padding:12px 16px;border:1px solid #ffffff2b;background:#0b2634ee;border-radius:13px;font-size:12px;text-align:center;width:max-content;max-width:90vw;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(min-width:720px){.bottom-panel{padding-bottom:30px}.scanner-frame{width:300px}.tip{top:calc(46% + 163px)}}
+  </style>
+</head>
+<body>
+  <div class="scene-wrap">
+    <a-scene id="arScene" mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
+      <a-assets timeout="10000"><a-asset-item id="dinoModel" src="./assets/model.glb"></a-asset-item></a-assets>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity id="targetAnchor" mindar-image-target="targetIndex: 0">
+        <!-- Replace the preview model with assets/model.glb. The AR anchor and tracking are already wired. -->
+        <a-entity id="modelSlot" position="0 0 0">
+          <a-gltf-model id="uploadedModel" src="#dinoModel" visible="false" scale="0.35 0.35 0.35" animation-mixer></a-gltf-model>
+          <a-entity id="demoModel" position="0 0 0" scale="0.55 0.55 0.55">
+            <!-- Lightweight placeholder creature, shown only until model.glb is added. -->
+            <a-sphere position="0 0.03 0" radius="0.28" scale="1.65 0.72 0.72" material="color: #a7dfc1; roughness: .65"></a-sphere>
+            <a-sphere position="0.36 0.08 0" radius="0.13" scale="1.25 1 1" material="color: #b7e6cc"></a-sphere>
+            <a-sphere position="0.49 0.1 0" radius="0.105" material="color: #b7e6cc"></a-sphere>
+            <a-sphere position="0.515 0.145 0.076" radius="0.018" material="color: #092532"></a-sphere>
+            <a-sphere position="0.515 0.145 -0.076" radius="0.018" material="color: #092532"></a-sphere>
+            <a-cylinder position="0.04 0.08 0" radius="0.045" height="0.78" rotation="0 0 -77" material="color: #b7e6cc"></a-cylinder>
+            <a-cone position="-0.39 -0.02 0" radius-bottom="0.11" radius-top="0.015" height="0.38" rotation="0 0 90" material="color: #94d7b6"></a-cone>
+            <a-entity position="0 -0.16 0.19" rotation="0 0 25"><a-cone radius-bottom="0.12" radius-top="0.015" height="0.34" material="color: #8dcfae"></a-cone></a-entity>
+            <a-entity position="0 -0.16 -0.19" rotation="0 0 25"><a-cone radius-bottom="0.12" radius-top="0.015" height="0.34" material="color: #8dcfae"></a-cone></a-entity>
+            <a-entity position="0.24 -0.14 0.18" rotation="0 0 25"><a-cone radius-bottom="0.12" radius-top="0.015" height="0.34" material="color: #8dcfae"></a-cone></a-entity>
+            <a-entity position="0.24 -0.14 -0.18" rotation="0 0 25"><a-cone radius-bottom="0.12" radius-top="0.015" height="0.34" material="color: #8dcfae"></a-cone></a-entity>
+            <a-text value="ADD YOUR GLB" align="center" position="0 -0.43 0" rotation="-90 0 0" width="1.45" color="#d9ffb0"></a-text>
+          </a-entity>
+          <a-ring position="0 -0.36 0" rotation="-90 0 0" radius-inner="0.40" radius-outer="0.405" material="color: #c9ef73; opacity: .8; shader: flat"></a-ring>
+        </a-entity>
+      </a-entity>
+    </a-scene>
+  </div>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">◉</div><div><div class="brand-name">OCEAN DISCOVERY</div><div class="brand-sub">Elasmosaurus AR</div></div></div>
+    <div class="live-pill"><span class="dot"></span> IMAGE AR</div>
+  </header>
+  <div class="scanner-frame"></div><div class="tip">Point your camera at the Elasmosaurus page</div>
+  <div class="hint-card"><strong>Nice find! The Elasmosaurus is here.</strong><span>Keep the marker inside the frame.</span></div>
+  <main class="bottom-panel" id="panel">
+    <div class="eyebrow">Bring the ocean to life</div>
+    <h1 class="headline">Meet the long-necked<br>ocean giant.</h1>
+    <p class="subtitle">Scan the Elasmosaurus picture with your camera and watch the 3D creature appear on the page.</p>
+    <button class="primary" id="startButton"><span class="button-icon">⌾</span><span>Start AR camera</span></button>
+    <button class="help" id="helpButton">Setup &amp; model instructions</button>
+    <div class="status" id="status" aria-live="polite"></div>
+  </main>
+  <div class="toast" id="toast"></div>
+  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-card"><button class="modal-close" id="closeHelp" aria-label="Close">×</button><h2 id="helpTitle">Finish your AR setup</h2>
+      <p>The uploaded book image is already included as the tracking marker. MindAR needs a compiled <b>.mind</b> target file before scanning.</p>
+      <ol><li>Choose <b>Compile marker</b> below. The browser will make and download <code>targets.mind</code>.</li><li>Move that file into the app's <code>assets</code> folder.</li><li>Add your model using this exact path:</li></ol>
+      <p class="model-path">assets/model.glb</p><p>GLB is the easiest web-ready format. The placeholder creature is replaced automatically when the file exists. For camera access, open this site over <b>HTTPS</b> or localhost and allow camera permission.</p>
+      <button class="primary" id="compileButton" style="width:100%">Compile marker image</button><div class="status" id="compileStatus"></div>
+    </div>
+  </div>
+  <script>
+    const scene = document.querySelector('#arScene');
+    const panel = document.querySelector('#panel');
+    const statusEl = document.querySelector('#status');
+    const toast = document.querySelector('#toast');
+    let isStarting = false;
+    function say(message){ statusEl.textContent = message; }
+    function showToast(message){ toast.textContent=message; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),3600); }
+    function setScanning(on){ document.body.classList.toggle('scanning',on); panel.classList.toggle('hide',on); }
+    document.querySelector('#targetAnchor').addEventListener('targetFound',()=>{document.body.classList.add('target-found');showToast('Elasmosaurus marker found');});
+    document.querySelector('#targetAnchor').addEventListener('targetLost',()=>document.body.classList.remove('target-found'));
+    scene.addEventListener('renderstart',()=>{
+      const model = document.querySelector('#uploadedModel');
+      model.addEventListener('model-loaded',()=>{model.setAttribute('visible','true');document.querySelector('#demoModel').setAttribute('visible','false');});
+      model.addEventListener('model-error',()=>{});
+    });
+    async function startAR(){
+      if(isStarting)return;isStarting=true;const button=document.querySelector('#startButton');button.disabled=true;button.querySelector('span:last-child').textContent='Checking setup…';
+      try{
+        const response=await fetch('./assets/targets.mind',{method:'HEAD',cache:'no-store'});
+        if(!response.ok){button.disabled=false;button.querySelector('span:last-child').textContent='Start AR camera';say('One-time setup needed: compile the marker target first.');document.querySelector('#helpModal').classList.add('open');isStarting=false;return;}
+        say('Allow camera access when your browser asks.');
+        const system=scene.systems['mindar-image-system'];
+        await system.start();setScanning(true);say('Camera on — scan the Elasmosaurus page.');
+      }catch(error){console.error(error);say('Could not start AR. Use HTTPS or localhost and allow camera access.');showToast(error.message||'Camera could not start');button.disabled=false;button.querySelector('span:last-child').textContent='Try again';isStarting=false;}
+    }
+    document.querySelector('#startButton').addEventListener('click',startAR);
+    document.querySelector('#helpButton').addEventListener('click',()=>document.querySelector('#helpModal').classList.add('open'));
+    document.querySelector('#closeHelp').addEventListener('click',()=>document.querySelector('#helpModal').classList.remove('open'));
+    document.querySelector('#helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')e.currentTarget.classList.remove('open')});
+    document.querySelector('#compileButton').addEventListener('click',async()=>{
+      const button=document.querySelector('#compileButton'), out=document.querySelector('#compileStatus');button.disabled=true;out.textContent='Loading MindAR image compiler…';
+      try{
+        if(!window.MINDAR?.Compiler){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});}
+        const image=new Image();image.src='./assets/marker.jpg';await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject});
+        const compiler=new window.MINDAR.Compiler();out.textContent='Analyzing the marker image… keep this tab open.';
+        await compiler.compileImageTargets([image],progress=>{out.textContent=`Compiling marker… ${Math.round(progress*100)}%`;});
+        const buffer=await compiler.exportData();const blob=new Blob([buffer],{type:'application/octet-stream'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='targets.mind';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),2000);
+        out.textContent='Done! Put targets.mind in the assets folder, then refresh the app.';
+      }catch(error){console.error(error);out.textContent='Compile failed. Run the app from localhost/HTTPS and try again.';}
+      finally{button.disabled=false;}
+    });
+  </script>
+</body>
+</html>
