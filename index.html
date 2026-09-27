@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.0/dist/aframe-extras.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
     :root{--navy:#071b2a;--sea:#0d3344;--mint:#b7f3dc;--lime:#c9ef73;--white:#f2f7f5;--muted:#9eb7bd;--line:#ffffff24}
@@ -38,7 +39,7 @@
       <a-entity id="targetAnchor" mindar-image-target="targetIndex: 0">
         <!-- Replace the preview model with assets/model.glb. The AR anchor and tracking are already wired. -->
         <a-entity id="modelSlot" position="0 0 0">
-          <a-gltf-model id="uploadedModel" src="#dinoModel" visible="false" scale="0.35 0.35 0.35" animation-mixer></a-gltf-model>
+          <a-gltf-model id="uploadedModel" src="#dinoModel" visible="false" scale="0.35 0.35 0.35" animation-mixer="clip: *; loop: repeat; timeScale: 1"></a-gltf-model>
           <a-entity id="demoModel" position="0 0 0" scale="0.55 0.55 0.55">
             <!-- Lightweight placeholder creature, shown only until model.glb is added. -->
             <a-sphere position="0 0.03 0" radius="0.28" scale="1.65 0.72 0.72" material="color: #a7dfc1; roughness: .65"></a-sphere>
@@ -93,10 +94,17 @@
     function setScanning(on){ document.body.classList.toggle('scanning',on); panel.classList.toggle('hide',on); }
     document.querySelector('#targetAnchor').addEventListener('targetFound',()=>{document.body.classList.add('target-found');showToast('Elasmosaurus marker found');});
     document.querySelector('#targetAnchor').addEventListener('targetLost',()=>document.body.classList.remove('target-found'));
-    scene.addEventListener('renderstart',()=>{
-      const model = document.querySelector('#uploadedModel');
-      model.addEventListener('model-loaded',()=>{model.setAttribute('visible','true');document.querySelector('#demoModel').setAttribute('visible','false');});
-      model.addEventListener('model-error',()=>{});
+    const model = document.querySelector('#uploadedModel');
+    model.addEventListener('model-loaded',(event)=>{
+      model.setAttribute('visible','true');
+      document.querySelector('#demoModel').setAttribute('visible','false');
+      const clips = event.detail?.model?.animations || [];
+      if (!clips.length) showToast('Model loaded, but this GLB has no embedded animation.');
+      else console.info(`Playing ${clips.length} GLB animation clip(s):`, clips.map(clip=>clip.name));
+    });
+    model.addEventListener('model-error',(event)=>{
+      console.error('Could not load assets/model.glb',event.detail);
+      showToast('Could not load model.glb — check the file path and format.');
     });
     async function startAR(){
       if(isStarting)return;isStarting=true;const button=document.querySelector('#startButton');button.disabled=true;button.querySelector('span:last-child').textContent='Checking setup…';
