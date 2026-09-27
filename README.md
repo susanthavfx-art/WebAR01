@@ -29,6 +29,8 @@ Camera access requires HTTPS or localhost and browser camera permission. A tap i
 
 Copy your web-ready `.glb` to exactly `assets/model.glb`. Refresh the app. The built-in teal creature preview is automatically hidden when the GLB loads. The model is attached to target index 0 in `index.html` under `#targetAnchor`.
 
+For GLB animation, `index.html` loads the A-Frame Extras animation-mixer and plays all embedded animation clips in a repeat loop. The GLB must actually contain animation clips (keyframes/rig animation exported into the GLB); a static GLB cannot be animated by the web page alone. In Blender, enable animation export when exporting glTF/GLB, then verify that the exported file includes animation actions/clips.
+
 To adjust model size, edit `scale="0.35 0.35 0.35"` on `#uploadedModel`. Adjust its position/rotation there too if needed. If your model is `.gltf`, it may need its `.bin` and texture files alongside it; GLB is recommended.
 
 ## Stack
