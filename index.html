@@ -40,14 +40,35 @@
   <div class="hint-card"><strong id="foundName">Dinosaur found!</strong><span>Keep the marker inside the frame.</span></div>
   <main class="bottom-panel" id="panel"><div class="eyebrow">Bring the prehistoric world to life</div><h1 class="headline">Meet the dinosaurs.</h1><p class="subtitle">Scan any of the four book images and see its matching 3D model appear.</p><button class="primary" id="startButton"><span class="button-icon">⌾</span><span>Start AR camera</span></button><button class="help" id="helpButton">Setup &amp; model instructions</button><div class="status" id="status" aria-live="polite"></div></main>
   <div class="toast" id="toast"></div>
-  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal-card"><button class="modal-close" id="closeHelp" aria-label="Close">×</button><h2 id="helpTitle">Set up the four AR markers</h2><p>All four marker images are included in <code>assets/</code>. Compile them together into <b>one</b> MindAR file. The order in the compiled file is important:</p><ol><li><code>marker.jpg</code> → <code>model.glb</code> (target index 0)</li><li><code>marker1.jpg</code> → <code>model1.glb</code> (target index 1)</li><li><code>marker2.jpg</code> → <code>model2.glb</code> (target index 2)</li><li><code>marker3.jpg</code> → <code>model3.glb</code> (target index 3)</li></ol><p>Tap Compile markers to download a single <code>targets.mind</code>. Upload it to <code>assets/targets.mind</code> and commit. Add each matching GLB to <code>assets/</code> using the filenames above.</p><p>GLB animations play automatically when clips are embedded in the model. The preview creatures remain until their GLB files are added. Camera access needs HTTPS/localhost and permission.</p><button class="primary" id="compileButton" style="width:100%">Compile all 4 markers</button><div class="status" id="compileStatus"></div></div></div>
+  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal-card"><button class="modal-close" id="closeHelp" aria-label="Close">×</button><h2 id="helpTitle">Set up the four AR markers</h2><p>All four marker images are included in <code>assets/</code>. Compile them together into <b>one</b> MindAR file. The order in the compiled file is important:</p><ol><li><code>marker.jpg</code> → <code>model.glb</code> (target index 0)</li><li><code>marker1.jpg</code> → <code>model1.glb</code> (target index 1)</li><li><code>marker2.jpg</code> → <code>model2.glb</code> (target index 2)</li><li><code>marker3.jpg</code> → <code>model3.glb</code> (target index 3)</li></ol><p>Tap Compile markers to download a single <code>targets.mind</code>. Upload it to <code>assets/targets.mind</code> and commit. Add each matching GLB to <code>assets/</code> using the filenames above.</p><p>Sound files in <code>assets/</code>: <code>Tyrannosaur_Roar_1.mp3</code> plays for marker1; <code>Raptor_triple_call.mp3</code> plays for marker3. Sound stops when its marker is lost or a different marker is found. GLB animations play when embedded. Camera access needs HTTPS/localhost and permission.</p><button class="primary" id="compileButton" style="width:100%">Compile all 4 markers</button><div class="status" id="compileStatus"></div></div></div>
   <script>
     const TARGETS = [
-      { marker: 'marker.jpg', model: 'model.glb', name: 'Elasmosaurus' },
-      { marker: 'marker1.jpg', model: 'model1.glb', name: 'Tyrannosaurus rex' },
-      { marker: 'marker2.jpg', model: 'model2.glb', name: 'Arizonasaurus' },
-      { marker: 'marker3.jpg', model: 'model3.glb', name: 'Allosaurus' }
+      { marker: 'marker.jpg', model: 'model.glb', name: 'Elasmosaurus', sound: null },
+      { marker: 'marker1.jpg', model: 'model1.glb', name: 'Tyrannosaurus rex', sound: 'Tyrannosaur_Roar_1.mp3' },
+      { marker: 'marker2.jpg', model: 'model2.glb', name: 'Arizonasaurus', sound: null },
+      { marker: 'marker3.jpg', model: 'model3.glb', name: 'Allosaurus', sound: 'Raptor_triple_call.mp3' }
     ];
+    // Put the two MP3 files in assets/ next to the marker and GLB files.
+    const soundPlayers = TARGETS.map(item => {
+      if (!item.sound) return null;
+      const audio = new Audio(`./assets/${item.sound}`);
+      audio.preload = 'auto';
+      audio.addEventListener('error', () => console.warn(`Could not load audio: assets/${item.sound}`));
+      return audio;
+    });
+    let playingSoundIndex = -1;
+    function stopSounds(){
+      soundPlayers.forEach(audio => { if(audio){audio.pause();audio.currentTime=0;} });
+      playingSoundIndex = -1;
+    }
+    function playTargetSound(index){
+      stopSounds();
+      const audio = soundPlayers[index];
+      if(!audio) return;
+      playingSoundIndex = index;
+      audio.currentTime = 0;
+      audio.play().catch(error => { console.warn('Browser blocked sound playback:',error); showToast('Sound blocked—tap the page and allow audio playback.'); });
+    }
     const scene = document.querySelector('#arScene');
     const panel = document.querySelector('#panel');
     const statusEl = document.querySelector('#status');
@@ -75,8 +96,8 @@
           </a-entity>
           <a-ring position="0 -0.36 0" rotation="-90 0 0" radius-inner="0.40" radius-outer="0.405" material="color: #c9ef73; opacity: .8; shader: flat"></a-ring>
         </a-entity>`;
-      anchor.addEventListener('targetFound',()=>{found.add(index);document.body.classList.add('target-found');document.querySelector('#foundName').textContent=`${item.name} found!`;showToast(`${item.name} marker found`);});
-      anchor.addEventListener('targetLost',()=>{found.delete(index);if(found.size===0)document.body.classList.remove('target-found');});
+      anchor.addEventListener('targetFound',()=>{found.add(index);document.body.classList.add('target-found');document.querySelector('#foundName').textContent=`${item.name} found!`;showToast(`${item.name} marker found`);playTargetSound(index);});
+      anchor.addEventListener('targetLost',()=>{found.delete(index);if(playingSoundIndex===index)stopSounds();if(found.size===0)document.body.classList.remove('target-found');});
       const model=anchor.querySelector('.uploaded-model');
       model.addEventListener('model-loaded',(event)=>{
         model.setAttribute('visible','true');anchor.querySelector('.preview-creature').setAttribute('visible','false');
