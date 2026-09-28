@@ -1,178 +1,86 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071b2a">
-  <title>Dino AR — Ocean Discovery</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.0/dist/aframe-extras.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <style>
-    :root{--navy:#071b2a;--mint:#b7f3dc;--lime:#c9ef73;--white:#f2f7f5}
-    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif}
-    .scene-wrap{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,#125067 0,#071b2a 70%)}a-scene{position:absolute!important;inset:0;width:100%;height:100%;z-index:1}a-scene canvas{display:block}
-    .topbar{position:fixed;top:0;left:0;right:0;z-index:5;padding:calc(env(safe-area-inset-top) + 17px) 22px 14px;display:flex;align-items:center;justify-content:space-between;pointer-events:none;background:linear-gradient(#071b2acc,transparent)}
-    .brand{display:flex;align-items:center;gap:11px}.brand-mark{width:34px;height:34px;border:1px solid #b7f3dc77;border-radius:12px;display:grid;place-items:center;color:var(--mint);font-size:17px;background:#b7f3dc12}.brand-name{font:700 15px 'Space Grotesk';letter-spacing:.015em}.brand-sub{font-size:10px;color:#a5c2c5;letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
-    .live-pill{border:1px solid #b7f3dc4a;border-radius:30px;padding:8px 12px;color:#d5f4e6;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:#071b2a8a;display:flex;align-items:center;gap:7px}.dot{width:7px;height:7px;border-radius:50%;background:#c9ef73;box-shadow:0 0 11px #c9ef73}
-    .bottom-panel{position:fixed;z-index:5;left:0;right:0;bottom:0;padding:48px 22px calc(env(safe-area-inset-bottom) + 22px);background:linear-gradient(transparent,#061722ee 25%,#061722 70%);display:flex;flex-direction:column;align-items:center;text-align:center;transition:opacity .25s}
-    .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--mint);font-weight:700;margin-bottom:9px}.headline{font:600 clamp(25px,6vw,34px)/1.05 'Space Grotesk';letter-spacing:-.045em;margin:0 0 9px}.subtitle{max-width:350px;color:#afc5ca;font-size:13px;line-height:1.55;margin:0 0 20px}
-    .primary{border:0;border-radius:15px;padding:15px 22px;min-width:210px;background:var(--lime);color:#11232a;font:700 14px 'DM Sans';box-shadow:0 8px 30px #b5df5c2b;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s,filter .15s}.primary:hover{filter:brightness(1.05);transform:translateY(-1px)}.primary:disabled{opacity:.55;cursor:wait}.button-icon{font-size:18px}
-    .help{border:0;background:none;color:#b7d2d4;font:500 12px 'DM Sans';margin-top:13px;padding:8px;cursor:pointer}.status{font-size:12px;color:#d1eee2;margin-top:13px;min-height:18px}.hide{display:none!important}
-    .scanner-frame{position:fixed;z-index:3;left:50%;top:46%;transform:translate(-50%,-50%);width:min(74vw,310px);aspect-ratio:1;border:1px solid #c9ef7370;border-radius:25px;pointer-events:none;opacity:0;transition:opacity .35s;box-shadow:0 0 0 9999px #06172212}.scanner-frame:before,.scanner-frame:after{content:'';position:absolute;inset:-1px;border-radius:25px;border:2px solid transparent;border-top-color:var(--lime);border-left-color:var(--lime);width:27px;height:27px}.scanner-frame:after{inset:auto -1px -1px auto;border:0;border-right:2px solid var(--lime);border-bottom:2px solid var(--lime);width:27px;height:27px;border-radius:0 0 25px 0}.scanning .scanner-frame{opacity:1}
-    .tip{position:fixed;z-index:4;top:calc(46% + min(39vw,165px));left:50%;transform:translateX(-50%);width:max-content;max-width:90vw;color:#e6f4ed;background:#071b2ab8;border:1px solid #ffffff24;border-radius:30px;padding:9px 14px;font-size:11px;opacity:0;transition:opacity .3s;pointer-events:none}.scanning .tip{opacity:1}.target-found .scanner-frame,.target-found .tip{opacity:0}
-    .hint-card{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);z-index:4;width:min(310px,80vw);padding:18px;border-radius:19px;text-align:center;background:#0a2330e8;border:1px solid #b7f3dc38;box-shadow:0 18px 50px #0006;pointer-events:auto;display:none}.target-found .hint-card{display:block}.hint-card strong{display:block;font:600 15px 'Space Grotesk';margin:0 0 6px}.hint-card span{font-size:12px;color:#b4cbcc}.sound-btn{margin:13px auto 0;border:1px solid #c9ef7380;border-radius:11px;padding:10px 16px;background:#c9ef73;color:#10242b;font:700 13px 'DM Sans';cursor:pointer}.sound-btn[hidden]{display:none}.sound-btn:active{transform:scale(.97)}
-    .modal{position:fixed;inset:0;z-index:10;background:#03111bd9;display:none;align-items:flex-end;justify-content:center;padding:20px}.modal.open{display:flex}.modal-card{max-width:460px;width:100%;max-height:85vh;overflow:auto;background:#0b2634;border:1px solid #b7f3dc2b;border-radius:22px;padding:23px 21px 20px;box-shadow:0 20px 80px #0008}.modal-card h2{font:600 20px 'Space Grotesk';margin:0 0 10px}.modal-card p,.modal-card li{font-size:13px;line-height:1.55;color:#bdd0d1}.modal-card ol{padding-left:21px}.modal-card li{margin:8px 0}.modal-close{float:right;border:0;background:#ffffff12;color:#fff;border-radius:50%;width:31px;height:31px;font-size:18px;cursor:pointer}.model-path{font-family:monospace;color:var(--lime)!important;background:#03131d;padding:9px;border-radius:8px}
-    .toast{position:fixed;z-index:8;top:80px;left:50%;transform:translate(-50%,-12px);padding:12px 16px;border:1px solid #ffffff2b;background:#0b2634ee;border-radius:13px;font-size:12px;text-align:center;width:max-content;max-width:90vw;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}@media(min-width:720px){.bottom-panel{padding-bottom:30px}.scanner-frame{width:300px}.tip{top:calc(46% + 163px)}}
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17140e">
+<title>Jurassic Kingdom — AR Dino Explorer</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.0/dist/aframe-extras.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+:root{--gold:#f4b52a;--gold2:#ffd76b;--ink:#17140e;--paper:#fff5d5;--muted:#d3c7a3;--panel:#17140eeb;--line:#f2c65a70}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b100c;color:var(--paper);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button{font:inherit;color:inherit}button:focus-visible{outline:3px solid #fff1a3;outline-offset:3px}
+.scene-wrap{position:fixed;inset:0;background:#07100e;z-index:0}a-scene{position:absolute!important;inset:0;width:100%;height:100%;z-index:0}a-scene canvas{display:block}
+.home-screen{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:radial-gradient(ellipse at center,#243a29 0,#090d0b 72%);transition:opacity .35s,visibility .35s}.home-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.home-stage{position:relative;width:min(100vw,calc(100dvh * .667));height:100dvh;overflow:hidden;isolation:isolate;box-shadow:0 0 80px #000a}.home-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:-1}.home-shade{position:absolute;inset:0;background:linear-gradient(180deg,#100c0470 0,transparent 21%,transparent 72%,#0c0b07a0 100%);z-index:-1}
+.top-action{position:absolute;top:max(18px,env(safe-area-inset-top));z-index:2;min-height:44px;padding:0 13px;display:flex;align-items:center;gap:7px;border:1px solid #f4d27a99;border-radius:12px;background:#100e0bd9;color:#ffe8a6;text-shadow:0 1px 2px #000;box-shadow:0 5px 20px #0007;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;cursor:pointer}.top-action .ico{font-size:20px;color:#f5ce70}.settings-action{left:4%}.about-action{right:4%}
+.art-button{position:absolute;border:0;background:transparent;padding:0;display:block;cursor:pointer;filter:drop-shadow(0 8px 10px #0009);transition:transform .16s,filter .16s}.art-button:hover{transform:translateY(-2px) scale(1.015);filter:drop-shadow(0 11px 12px #000b) brightness(1.06)}.art-button:active{transform:scale(.98)}.art-button img{display:block;width:100%;height:auto}.start-art{left:9%;width:82%;top:69.1%}.library-art{left:4%;width:46%;bottom:5.5%}.quiz-hit{position:absolute;right:4%;width:45%;height:8%;bottom:5.5%;border:0;background:transparent;cursor:pointer;border-radius:14px}.quiz-hit:hover{background:#ffc13a13;outline:1px solid #f8c34b66}
+.ar-hud{display:none;position:fixed;inset:0;z-index:6;pointer-events:none}.scanning .ar-hud{display:block}.hud-top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 14px) 16px 48px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#100f0ce8,transparent);pointer-events:auto}.hud-brand{font-weight:900;letter-spacing:.14em;text-transform:uppercase;font-size:12px;text-shadow:0 2px 6px #000;display:flex;align-items:center;gap:9px}.hud-mark{width:31px;height:31px;border:1px solid var(--gold);border-radius:10px;display:grid;place-items:center;color:var(--gold2);background:#14110acc;font-size:17px}.icon-button{width:48px;height:48px;border:0;background:transparent;padding:0;cursor:pointer;filter:drop-shadow(0 3px 6px #0009);pointer-events:auto}.icon-button img{width:100%;height:100%;object-fit:contain}.scan-tip{position:absolute;top:calc(env(safe-area-inset-top) + 76px);left:50%;transform:translateX(-50%);white-space:nowrap;background:#15130fd9;border:1px solid var(--line);border-radius:999px;padding:10px 15px;color:#fff4d4;font-size:12px;font-weight:650;box-shadow:0 8px 25px #0006}.scan-frame{position:absolute;width:min(74vw,340px);aspect-ratio:1;top:47%;left:50%;transform:translate(-50%,-50%);border:1.5px solid #f4c34e9c;border-radius:28px;box-shadow:0 0 0 999px #05080612;opacity:.85}.scan-frame:before,.scan-frame:after{content:'';position:absolute;width:29px;height:29px;border-color:#ffe17b;border-style:solid}.scan-frame:before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:20px 0 0}.scan-frame:after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 20px}.target-found .scan-frame{opacity:0}
+.target-card{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 23px);transform:translateX(-50%) translateY(16px);width:min(430px,calc(100vw - 32px));padding:16px 17px;display:flex;align-items:center;justify-content:space-between;gap:15px;border:1px solid #f7d276a6;border-radius:19px;background:linear-gradient(135deg,#16130ff2,#2a2115ed);box-shadow:0 14px 45px #000a;opacity:0;visibility:hidden;transition:.25s;pointer-events:auto}.target-found .target-card{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}.target-copy strong{display:block;color:#ffe5a0;font:800 16px/1.1 system-ui;letter-spacing:.04em}.target-copy span{display:block;color:#d8cba9;font-size:11px;margin-top:5px}.play-sound{display:flex;align-items:center;gap:9px;flex-shrink:0;border:1px solid #f5ca5b8a;border-radius:13px;padding:6px 12px 6px 6px;background:#211b12;color:#ffe8a0;font-size:11px;font-weight:800;cursor:pointer}.play-sound img{width:42px;height:42px;object-fit:contain}.play-sound:active{transform:scale(.97)}.target-card.no-sound .play-sound{display:none}
+.scan-frame{pointer-events:none}.hud-top,.target-card{pointer-events:auto}
+.overlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:18px;background:#070906df;backdrop-filter:blur(8px)}.overlay.open{display:flex}.overlay-card{position:relative;width:min(500px,100%);max-height:min(86dvh,850px);overflow:auto;border:1px solid #f4cf6f8c;border-radius:22px;background:linear-gradient(145deg,#211a10f7,#0d100df7);box-shadow:0 25px 90px #000c;padding:23px;color:var(--paper)}.overlay-close{position:sticky;float:right;top:0;margin:-8px -8px 0 12px;width:45px;height:45px;z-index:2;border:0;background:transparent;padding:0;cursor:pointer}.overlay-close img{width:100%;height:100%;object-fit:contain}.overlay-title{font:900 23px/1.1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#ffda7c;margin:2px 52px 8px 0}.overlay-sub{font-size:13px;color:#d1c4a2;line-height:1.5;margin:0 0 18px}.library-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.dino-card{border:1px solid #9d793c80;border-radius:15px;background:#11140ff0;overflow:hidden}.dino-card img{width:100%;height:105px;object-fit:cover;display:block}.dino-card div{padding:10px}.dino-card strong{font-size:12px;color:#ffe2a0}.dino-card p{margin:5px 0 0;color:#c9c0a8;font-size:10px;line-height:1.35}.gold-action{width:100%;border:1px solid #ffe07e;border-radius:12px;background:linear-gradient(#ffd45d,#bb741a);color:#211505;font-weight:900;letter-spacing:.08em;padding:13px;cursor:pointer;text-transform:uppercase;margin-top:14px;box-shadow:inset 0 1px #fff6,0 5px 14px #0007}.guide-wrap{position:relative;width:min(100%,600px);height:100%;max-height:94dvh;display:flex;justify-content:center;align-items:center}.guide-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 20px 80px #000b}.guide-close{position:absolute;right:0;top:0;width:48px;height:48px;border:0;padding:0;background:transparent;cursor:pointer;filter:drop-shadow(0 2px 6px #000)}.guide-close img{width:100%;height:100%}.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #f3d17a30;color:#f7e7bd;font-size:14px}.toggle{border:1px solid #f2cc62;border-radius:99px;background:#252017;color:#ffe599;padding:8px 13px;font-weight:800;cursor:pointer}.toggle.off{opacity:.55;color:#ccc}.quiz-question{font-size:17px;font-weight:750;line-height:1.35;color:#fff1c5;margin:18px 0}.quiz-answers{display:grid;gap:9px}.quiz-answer{padding:12px;border:1px solid #9d793c;border-radius:11px;background:#161811;text-align:left;cursor:pointer}.quiz-answer:hover{background:#362b17}.feedback{min-height:22px;margin:10px 0 0;color:#ffdb76;font-weight:700;font-size:13px}.helper-note{font-size:11px;color:#b9ad90;line-height:1.5;margin-top:12px}
+.toast{position:fixed;z-index:30;left:50%;top:calc(env(safe-area-inset-top) + 75px);transform:translate(-50%,-8px);padding:11px 16px;border-radius:13px;border:1px solid #f3d17a99;background:#18140fec;color:#ffedbf;font-size:12px;font-weight:700;white-space:nowrap;opacity:0;transition:.2s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-height:690px){.start-art{top:67%}.library-art,.quiz-hit{bottom:4%}.top-action{min-height:40px}.target-card{bottom:calc(env(safe-area-inset-bottom) + 12px)}}
+@media(min-width:700px){.home-stage{width:min(600px,calc(100dvh * .667));height:100dvh}.overlay-card{padding:27px}.dino-card img{height:130px}}
+</style>
 </head>
 <body>
-  <div class="scene-wrap">
-    <a-scene id="arScene" mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded>
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-entity id="targetAnchors"></a-entity>
-    </a-scene>
-  </div>
-  <header class="topbar"><div class="brand"><div class="brand-mark">◉</div><div><div class="brand-name">DINO DISCOVERY</div><div class="brand-sub">Multi-marker AR</div></div></div><div class="live-pill"><span class="dot"></span> IMAGE AR</div></header>
-  <div class="scanner-frame"></div><div class="tip">Scan any of the four dinosaur pages</div>
-  <div class="hint-card"><strong id="foundName">Dinosaur found!</strong><span id="soundCaption">Tap Play sound to hear the dinosaur.</span><button class="sound-btn" id="playSoundButton" type="button" hidden>▶ Play sound</button></div>
-  <main class="bottom-panel" id="panel"><div class="eyebrow">Bring the prehistoric world to life</div><h1 class="headline">Meet the dinosaurs.</h1><p class="subtitle">Scan any of the four book images and see its matching 3D model appear.</p><button class="primary" id="startButton"><span class="button-icon">⌾</span><span>Start AR camera</span></button><button class="help" id="helpButton">Setup &amp; model instructions</button><div class="status" id="status" aria-live="polite"></div></main>
-  <div class="toast" id="toast"></div>
-  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal-card"><button class="modal-close" id="closeHelp" aria-label="Close">×</button><h2 id="helpTitle">Set up the four AR markers</h2><p>All four marker images are included in <code>assets/</code>. Compile them together into <b>one</b> MindAR file. The order in the compiled file is important:</p><ol><li><code>marker.jpg</code> → <code>model.glb</code> (target index 0)</li><li><code>marker1.jpg</code> → <code>model1.glb</code> (target index 1)</li><li><code>marker2.jpg</code> → <code>model2.glb</code> (target index 2)</li><li><code>marker3.jpg</code> → <code>model3.glb</code> (target index 3)</li></ol><p>Tap Compile markers to download a single <code>targets.mind</code>. Upload it to <code>assets/targets.mind</code> and commit. Add each matching GLB to <code>assets/</code> using the filenames above.</p><p>Sound files in <code>assets/</code>: <code>Tyrannosaur_Roar_1.mp3</code> plays for marker1; <code>Raptor_triple_call.mp3</code> plays for marker3. Scan a marker, then tap <b>Play sound</b> to hear its matching clip. GLB animations play when embedded. Camera access needs HTTPS/localhost and permission.</p><button class="primary" id="compileButton" style="width:100%">Compile all 4 markers</button><div class="status" id="compileStatus"></div></div></div>
-  <script>
-    const TARGETS = [
-      { marker: 'marker.jpg', model: 'model.glb', name: 'Elasmosaurus', sound: null },
-      { marker: 'marker1.jpg', model: 'model1.glb', name: 'Tyrannosaurus rex', sound: 'Tyrannosaur_Roar_1.mp3' },
-      { marker: 'marker2.jpg', model: 'model2.glb', name: 'Arizonasaurus', sound: null },
-      { marker: 'marker3.jpg', model: 'model3.glb', name: 'Allosaurus', sound: 'Raptor_triple_call.mp3' }
-    ];
-    // Load/decode audio files early. Resume AudioContext from the Start AR tap so
-    // mobile browser autoplay rules allow playback when a marker is recognized.
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    const audioContext = AudioContextClass ? new AudioContextClass() : null;
-    const soundLoads = TARGETS.map(item => {
-      if (!item.sound || !audioContext) return Promise.resolve(null);
-      return fetch(`./assets/${item.sound}`)
-        .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status} for ${item.sound}`); return response.arrayBuffer(); })
-        .then(data => audioContext.decodeAudioData(data))
-        .catch(error => { console.error(`Cannot load sound assets/${item.sound}`, error); return null; });
-    });
-    let playingSoundIndex = -1;
-    let activeSoundSource = null;
-    let soundRequest = 0;
-    function stopSounds(){
-      soundRequest++;
-      if (activeSoundSource) { try { activeSoundSource.stop(); } catch (_) {} activeSoundSource.disconnect(); activeSoundSource = null; }
-      playingSoundIndex = -1;
-    }
-    async function playTargetSound(index){
-      stopSounds();
-      if (!TARGETS[index].sound || !audioContext) return;
-      const request = soundRequest;
-      playingSoundIndex = index;
-      const buffer = await soundLoads[index];
-      if (!buffer || request !== soundRequest || !found.has(index)) return;
-      try {
-        if (audioContext.state !== 'running') await audioContext.resume();
-        if (request !== soundRequest) return;
-        const source = audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContext.destination);
-        activeSoundSource = source;
-        source.onended = () => { if (activeSoundSource === source) { activeSoundSource = null; playingSoundIndex = -1; document.querySelector('#playSoundButton').textContent='▶ Play again'; } };
-        source.start(0);
-        document.querySelector('#playSoundButton').textContent='♪ Playing…';
-      } catch (error) { console.warn('Sound playback failed:', error); showToast('Sound could not play—tap Start AR and check device volume.'); }
-    }
-    const scene = document.querySelector('#arScene');
-    const panel = document.querySelector('#panel');
-    const statusEl = document.querySelector('#status');
-    const toast = document.querySelector('#toast');
-    const found = new Set();
-    let currentTargetIndex = -1;
-    let isStarting = false;
-    function say(message){ statusEl.textContent = message; }
-    function showToast(message){ toast.textContent=message; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),3600); }
-    function setScanning(on){ document.body.classList.toggle('scanning',on); panel.classList.toggle('hide',on); }
-    function setCurrentTarget(index){
-      currentTargetIndex=index;
-      const item=TARGETS[index];
-      document.querySelector('#foundName').textContent=`${item.name} found!`;
-      const button=document.querySelector('#playSoundButton');
-      const caption=document.querySelector('#soundCaption');
-      if(item.sound){button.hidden=false;button.textContent='▶ Play sound';caption.textContent=`Tap to hear the ${item.name} sound.`;}
-      else{button.hidden=true;caption.textContent='No sound clip added for this dinosaur yet.';}
-    }
-    function createAnchor(item,index){
-      const anchor=document.createElement('a-entity');
-      anchor.setAttribute('mindar-image-target',`targetIndex: ${index}`);
-      anchor.innerHTML=`
-        <a-entity position="0 0 0">
-          <a-gltf-model class="uploaded-model" src="./assets/${item.model}" visible="false" scale="0.35 0.35 0.35" animation-mixer="clip: *; loop: repeat; timeScale: 1"></a-gltf-model>
-          <a-entity class="preview-creature" position="0 0 0" scale="0.55 0.55 0.55">
-            <a-sphere position="0 0.03 0" radius="0.28" scale="1.65 0.72 0.72" material="color: #a7dfc1; roughness: .65"></a-sphere>
-            <a-sphere position="0.36 0.08 0" radius="0.13" scale="1.25 1 1" material="color: #b7e6cc"></a-sphere>
-            <a-sphere position="0.49 0.1 0" radius="0.105" material="color: #b7e6cc"></a-sphere>
-            <a-sphere position="0.515 0.145 0.076" radius="0.018" material="color: #092532"></a-sphere><a-sphere position="0.515 0.145 -0.076" radius="0.018" material="color: #092532"></a-sphere>
-            <a-cylinder position="0.04 0.08 0" radius="0.045" height="0.78" rotation="0 0 -77" material="color: #b7e6cc"></a-cylinder>
-            <a-cone position="-0.39 -0.02 0" radius-bottom="0.11" radius-top="0.015" height="0.38" rotation="0 0 90" material="color: #94d7b6"></a-cone>
-            <a-entity position="0 -0.16 0.19" rotation="0 0 25"><a-cone radius-bottom="0.12" radius-top="0.015" height="0.34" material="color: #8dcfae"></a-cone></a-entity><a-entity position="0 -0.16 -0.19" rotation="0 0 25"><a-cone radius-bottom="0.12" radius-top="0.015" height="0.34" material="color: #8dcfae"></a-cone></a-entity>
-            <a-text value="${item.name.toUpperCase()} · ADD GLB" align="center" position="0 -0.43 0" rotation="-90 0 0" width="1.7" color="#d9ffb0"></a-text>
-          </a-entity>
-          <a-ring position="0 -0.36 0" rotation="-90 0 0" radius-inner="0.40" radius-outer="0.405" material="color: #c9ef73; opacity: .8; shader: flat"></a-ring>
-        </a-entity>`;
-      anchor.addEventListener('targetFound',()=>{found.add(index);stopSounds();document.body.classList.add('target-found');setCurrentTarget(index);showToast(`${item.name} marker found`);});
-      anchor.addEventListener('targetLost',()=>{
-        found.delete(index);
-        if(playingSoundIndex===index)stopSounds();
-        if(currentTargetIndex===index){
-          const remaining=Array.from(found).pop();
-          if(remaining!==undefined)setCurrentTarget(remaining);
-          else{currentTargetIndex=-1;document.body.classList.remove('target-found');}
-        }
-      });
-      const model=anchor.querySelector('.uploaded-model');
-      model.addEventListener('model-loaded',(event)=>{
-        model.setAttribute('visible','true');anchor.querySelector('.preview-creature').setAttribute('visible','false');
-        const clips=event.detail?.model?.animations||[];if(clips.length)console.info(`${item.name}: playing ${clips.length} animation clip(s).`);else console.info(`${item.name} loaded; this GLB has no embedded animation clips.`);
-      });
-      model.addEventListener('model-error',()=>console.info(`${item.model} not added yet; showing placeholder.`));
-      return anchor;
-    }
-    function buildAnchors(){const root=document.querySelector('#targetAnchors');if(root.children.length)return;TARGETS.forEach((item,index)=>root.appendChild(createAnchor(item,index)));}
-    if(scene.hasLoaded)buildAnchors();else scene.addEventListener('loaded',buildAnchors,{once:true});
-    async function startAR(){
-      if(isStarting)return;
-      // Must be called directly from the Start button gesture for iOS/Android audio policies.
-      const resumeAudio = audioContext && audioContext.state !== 'running' ? audioContext.resume().catch(error=>console.warn('Audio unlock failed:',error)) : Promise.resolve();
-      isStarting=true;const button=document.querySelector('#startButton');button.disabled=true;button.querySelector('span:last-child').textContent='Checking setup…';
-      try{await resumeAudio;await Promise.all(soundLoads);const response=await fetch('./assets/targets.mind',{method:'HEAD',cache:'no-store'});if(!response.ok){button.disabled=false;button.querySelector('span:last-child').textContent='Start AR camera';say('One-time setup needed: compile all four markers first.');document.querySelector('#helpModal').classList.add('open');isStarting=false;return;}
-        say('Allow camera access when your browser asks.');await scene.systems['mindar-image-system'].start();setScanning(true);say('Camera on — scan any dinosaur page.');
-      }catch(error){console.error(error);say('Could not start AR. Use HTTPS or localhost and allow camera access.');showToast(error.message||'Camera could not start');button.disabled=false;button.querySelector('span:last-child').textContent='Try again';isStarting=false;}
-    }
-    document.querySelector('#startButton').addEventListener('click',startAR);
-    document.querySelector('#playSoundButton').addEventListener('click',()=>{
-      if(currentTargetIndex<0)return;
-      if(audioContext && audioContext.state!=='running')audioContext.resume().then(()=>playTargetSound(currentTargetIndex));
-      else playTargetSound(currentTargetIndex);
-    });
-    document.querySelector('#helpButton').addEventListener('click',()=>document.querySelector('#helpModal').classList.add('open'));
-    document.querySelector('#closeHelp').addEventListener('click',()=>document.querySelector('#helpModal').classList.remove('open'));
-    document.querySelector('#helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')e.currentTarget.classList.remove('open')});
-    document.querySelector('#compileButton').addEventListener('click',async()=>{
-      const button=document.querySelector('#compileButton'),out=document.querySelector('#compileStatus');button.disabled=true;out.textContent='Loading MindAR compiler…';
-      try{
-        if(!window.MINDAR?.Compiler)await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';script.onload=resolve;script.onerror=reject;document.head.appendChild(script);});
-        const images=await Promise.all(TARGETS.map(item=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error(`Missing marker image: assets/${item.marker}`));image.src=`./assets/${item.marker}`;})));
-        const compiler=new window.MINDAR.Compiler();out.textContent='Analyzing all four images… keep this tab open.';
-        await compiler.compileImageTargets(images,progress=>{out.textContent=`Compiling markers… ${Math.round(progress*100)}%`;});
-        const buffer=await compiler.exportData();const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([buffer],{type:'application/octet-stream'}));link.download='targets.mind';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),2500);
-        out.textContent='Done! Upload this single targets.mind to the assets folder and commit it.';
-      }catch(error){console.error(error);out.textContent=`Compile failed: ${error.message||'check connection and marker images'}`;}
-      finally{button.disabled=false;}
-    });
-  </script>
+<div class="scene-wrap"><a-scene id="arScene" mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" embedded><a-camera position="0 0 0" look-controls="enabled: false"></a-camera><a-entity id="targetAnchors"></a-entity></a-scene></div>
+<main class="home-screen" id="homeScreen"><div class="home-stage"><img class="home-art" src="./assets/ui/home-screen.jpg" alt="Jurassic Kingdom dinosaur adventure home screen"><div class="home-shade"></div>
+  <button class="top-action settings-action" id="settingsButton"><span class="ico">⚙</span><span>Settings</span></button><button class="top-action about-action" id="aboutButton"><span class="ico">ⓘ</span><span>About</span></button>
+  <button class="art-button start-art" id="startButton" aria-label="Start dinosaur AR adventure"><img src="./assets/ui/button-start.png" alt="Start — begin your adventure"></button>
+  <button class="art-button library-art" id="libraryButton" aria-label="Open dinosaur library"><img src="./assets/ui/button-library.png" alt="Dino Library — explore dinosaurs"></button>
+  <button class="quiz-hit" id="quizButton" aria-label="Open quiz challenge" title="Quiz Challenge"></button>
+</div></main>
+<div class="ar-hud" id="arHud"><div class="hud-top"><div class="hud-brand"><span class="hud-mark">✦</span> Jurassic Kingdom · AR Scan</div><button class="icon-button" id="closeAR" aria-label="Close camera and return to menu"><img src="./assets/ui/button-close.png" alt="Close"></button></div><div class="scan-tip" id="scanTip">Point your camera at a dinosaur card</div><div class="scan-frame"></div><div class="target-card no-sound" id="targetCard"><div class="target-copy"><strong id="foundName">Dinosaur found</strong><span id="foundCaption">Keep the card in view to explore.</span></div><button class="play-sound" id="playSoundButton" aria-label="Play this dinosaur's sound"><img src="./assets/ui/button-sound.png" alt=""><span>PLAY SOUND</span></button></div></div>
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<div class="overlay" id="libraryOverlay" role="dialog" aria-modal="true" aria-labelledby="libraryTitle"><section class="overlay-card"><button class="overlay-close" data-close="libraryOverlay" aria-label="Close"><img src="./assets/ui/button-close.png" alt=""></button><h2 class="overlay-title" id="libraryTitle">Dino Library</h2><p class="overlay-sub">Meet the four creatures in your AR collection. Scan any matching card to bring its 3D model to life.</p><div class="library-grid">
+  <article class="dino-card"><img src="./assets/marker.jpg" alt="Elasmosaurus card"><div><strong>ELASMOSAURUS</strong><p>Long-necked marine reptile of the ancient seas.</p></div></article>
+  <article class="dino-card"><img src="./assets/marker1.jpg" alt="Tyrannosaurus card"><div><strong>TYRANNOSAURUS REX</strong><p>Powerful predator with a massive skull and bite.</p></div></article>
+  <article class="dino-card"><img src="./assets/marker2.jpg" alt="Arizonasaurus card"><div><strong>ARIZONASAURUS</strong><p>An early sail-backed reptile from the Triassic.</p></div></article>
+  <article class="dino-card"><img src="./assets/marker3.jpg" alt="Allosaurus card"><div><strong>ALLOSAURUS</strong><p>Fast-moving Jurassic hunter with strong hind limbs.</p></div></article>
+</div><button class="gold-action" data-close="libraryOverlay">Back to adventure</button></section></div>
+<div class="overlay" id="guideOverlay" role="dialog" aria-modal="true" aria-label="How to scan dinosaur cards"><div class="guide-wrap"><img class="guide-img" src="./assets/ui/scan-guide.jpg" alt="How to scan: tap Scan Card, point your camera at a dinosaur flash card, and watch it come to life"><button class="guide-close" data-close="guideOverlay" aria-label="Close guide"><img src="./assets/ui/button-close.png" alt=""></button></div></div>
+<div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><section class="overlay-card"><button class="overlay-close" data-close="settingsOverlay" aria-label="Close"><img src="./assets/ui/button-close.png" alt=""></button><h2 class="overlay-title" id="settingsTitle">Settings</h2><p class="overlay-sub">Tune your Jurassic Kingdom experience.</p><div class="setting-row"><span>Sound playback</span><button class="toggle" id="soundToggle">ON</button></div><div class="setting-row"><span>Camera permission</span><span style="color:#e1c982;font-size:12px">Ask when scanning</span></div><button class="gold-action" id="compileButton">Rebuild marker target file</button><div class="helper-note" id="compileStatus">If you update any marker card, compile all four together and replace assets/targets.mind.</div></section></div>
+<div class="overlay" id="quizOverlay" role="dialog" aria-modal="true" aria-labelledby="quizTitle"><section class="overlay-card"><button class="overlay-close" data-close="quizOverlay" aria-label="Close"><img src="./assets/ui/button-close.png" alt=""></button><h2 class="overlay-title" id="quizTitle">Quiz Challenge</h2><p class="overlay-sub">Test your dinosaur knowledge.</p><div id="quizContent"></div></section></div>
+
+<script>
+const TARGETS=[
+ {marker:'marker.jpg',model:'model.glb',name:'Elasmosaurus',sound:null},
+ {marker:'marker1.jpg',model:'model1.glb',name:'Tyrannosaurus rex',sound:'Tyrannosaur_Roar_1.mp3'},
+ {marker:'marker2.jpg',model:'model2.glb',name:'Arizonasaurus',sound:null},
+ {marker:'marker3.jpg',model:'model3.glb',name:'Allosaurus',sound:'Raptor_triple_call.mp3'}
+];
+const scene=document.querySelector('#arScene'), found=new Set();let currentTargetIndex=-1,playingSoundIndex=-1,isStarting=false,soundEnabled=true,activeSource=null,soundToken=0;
+const AudioContextClass=window.AudioContext||window.webkitAudioContext;const audioContext=AudioContextClass?new AudioContextClass():null;
+const soundLoads=TARGETS.map(item=>{if(!item.sound||!audioContext)return Promise.resolve(null);return fetch(`./assets/${item.sound}`).then(r=>{if(!r.ok)throw Error(`${r.status} ${item.sound}`);return r.arrayBuffer()}).then(data=>audioContext.decodeAudioData(data)).catch(err=>{console.warn('Sound load failed',err);return null})});
+function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600)}
+function openOverlay(id){document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));document.querySelector('#'+id).classList.add('open')}
+function closeOverlay(id){document.querySelector('#'+id)?.classList.remove('open')}
+document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>closeOverlay(btn.dataset.close)));
+document.querySelectorAll('.overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open')}));
+document.querySelector('#settingsButton').addEventListener('click',()=>openOverlay('settingsOverlay'));
+document.querySelector('#aboutButton').addEventListener('click',()=>openOverlay('guideOverlay'));
+document.querySelector('#libraryButton').addEventListener('click',()=>openOverlay('libraryOverlay'));
+document.querySelector('#quizButton').addEventListener('click',()=>{quizIndex=0;quizScore=0;renderQuiz();openOverlay('quizOverlay')});
+function stopSounds(){soundToken++;if(activeSource){try{activeSource.stop()}catch(_){}activeSource.disconnect();activeSource=null}playingSoundIndex=-1}
+async function playTargetSound(index){if(!soundEnabled){toast('Sound is turned off in Settings.');return}stopSounds();if(!TARGETS[index]?.sound||!audioContext){toast('No sound clip is assigned to this dinosaur yet.');return}const token=soundToken;playingSoundIndex=index;const buffer=await soundLoads[index];if(!buffer||token!==soundToken||!found.has(index))return;try{if(audioContext.state!=='running')await audioContext.resume();if(token!==soundToken)return;const src=audioContext.createBufferSource();src.buffer=buffer;src.connect(audioContext.destination);activeSource=src;src.onended=()=>{if(activeSource===src){activeSource=null;playingSoundIndex=-1;document.querySelector('#playSoundButton').querySelector('span').textContent='PLAY AGAIN'}};document.querySelector('#playSoundButton').querySelector('span').textContent='PLAYING…';src.start(0)}catch(err){console.warn(err);toast('Audio could not play. Check device volume.')}}
+function updateTargetCard(index){currentTargetIndex=index;const item=TARGETS[index],card=document.querySelector('#targetCard');document.querySelector('#foundName').textContent=item.name;document.querySelector('#foundCaption').textContent=item.sound?'Tap the sound button to hear its call.':'3D model detected — sound clip coming soon.';card.classList.toggle('no-sound',!item.sound);document.querySelector('#playSoundButton').querySelector('span').textContent='PLAY SOUND'}
+function createAnchor(item,index){const anchor=document.createElement('a-entity');anchor.setAttribute('mindar-image-target',`targetIndex: ${index}`);anchor.innerHTML=`<a-entity position="0 0 0"><a-gltf-model class="uploaded-model" src="./assets/${item.model}" visible="false" scale="0.35 0.35 0.35" animation-mixer="clip: *; loop: repeat; timeScale: 1"></a-gltf-model><a-entity class="preview-creature" position="0 0 0" scale="0.55 0.55 0.55"><a-sphere position="0 0.03 0" radius="0.28" scale="1.65 0.72 0.72" material="color:#a7dfc1;roughness:.65"></a-sphere><a-sphere position="0.36 0.08 0" radius="0.13" scale="1.25 1 1" material="color:#b7e6cc"></a-sphere><a-sphere position="0.49 0.1 0" radius="0.105" material="color:#b7e6cc"></a-sphere><a-sphere position="0.515 0.145 0.076" radius="0.018" material="color:#092532"></a-sphere><a-sphere position="0.515 0.145 -0.076" radius="0.018" material="color:#092532"></a-sphere><a-cylinder position="0.04 0.08 0" radius="0.045" height="0.78" rotation="0 0 -77" material="color:#b7e6cc"></a-cylinder><a-cone position="-0.39 -0.02 0" radius-bottom="0.11" radius-top="0.015" height="0.38" rotation="0 0 90" material="color:#94d7b6"></a-cone><a-text value="${item.name.toUpperCase()} · ADD GLB" align="center" position="0 -0.43 0" rotation="-90 0 0" width="1.7" color="#d9ffb0"></a-text></a-entity></a-entity>`;
+ anchor.addEventListener('targetFound',()=>{found.add(index);stopSounds();document.body.classList.add('target-found');updateTargetCard(index);toast(`${item.name} detected`)});
+ anchor.addEventListener('targetLost',()=>{found.delete(index);if(playingSoundIndex===index)stopSounds();if(currentTargetIndex===index){const rest=Array.from(found).pop();if(rest!==undefined)updateTargetCard(rest);else{currentTargetIndex=-1;document.body.classList.remove('target-found')}}});
+ const model=anchor.querySelector('.uploaded-model');model.addEventListener('model-loaded',event=>{model.setAttribute('visible','true');anchor.querySelector('.preview-creature').setAttribute('visible','false');const clips=event.detail?.model?.animations||[];if(clips.length)console.info(`${item.name}: ${clips.length} animation clip(s)`)});model.addEventListener('model-error',()=>console.info(`${item.model} missing/unavailable; using preview model`));return anchor}
+function buildAnchors(){const root=document.querySelector('#targetAnchors');if(root.children.length)return;TARGETS.forEach((item,i)=>root.appendChild(createAnchor(item,i)))}
+if(scene.hasLoaded)buildAnchors();else scene.addEventListener('loaded',buildAnchors,{once:true});
+function setScanning(on){document.body.classList.toggle('scanning',on);document.querySelector('#homeScreen').classList.toggle('hidden',on);if(!on)document.body.classList.remove('target-found')}
+async function startAR(){if(isStarting)return;isStarting=true;const button=document.querySelector('#startButton');button.disabled=true;const original=button.innerHTML;button.style.opacity='.72';if(audioContext&&audioContext.state!=='running')audioContext.resume().catch(()=>{});try{await Promise.all(soundLoads);const res=await fetch('./assets/targets.mind',{method:'HEAD',cache:'no-store'});if(!res.ok){openOverlay('settingsOverlay');document.querySelector('#compileStatus').textContent='Compile all 4 marker images, then upload the downloaded targets.mind into assets/.';return}await scene.systems['mindar-image-system'].start();setScanning(true)}catch(err){console.error(err);toast('Camera could not start. Allow camera access and use HTTPS.')}finally{button.disabled=false;button.style.opacity='';isStarting=false}}
+document.querySelector('#startButton').addEventListener('click',startAR);
+document.querySelector('#playSoundButton').addEventListener('click',()=>{if(currentTargetIndex<0)return;if(audioContext&&audioContext.state!=='running')audioContext.resume().then(()=>playTargetSound(currentTargetIndex));else playTargetSound(currentTargetIndex)});
+document.querySelector('#closeAR').addEventListener('click',async()=>{stopSounds();try{await scene.systems['mindar-image-system'].stop()}catch(err){console.warn('AR stop',err)}found.clear();currentTargetIndex=-1;setScanning(false)});
+document.querySelector('#soundToggle').addEventListener('click',event=>{soundEnabled=!soundEnabled;event.currentTarget.textContent=soundEnabled?'ON':'OFF';event.currentTarget.classList.toggle('off',!soundEnabled);if(!soundEnabled)stopSounds()});
+const QUESTIONS=[{q:'Which dinosaur is paired with marker1?',a:['Tyrannosaurus rex','Elasmosaurus','Allosaurus'],correct:0},{q:'Which creature lived in the sea?',a:['Arizonasaurus','Elasmosaurus','T. rex'],correct:1},{q:'Which marker triggers the Raptor call?',a:['marker.jpg','marker2.jpg','marker3.jpg'],correct:2},{q:'What brings the printed cards to life?',a:['Image tracking AR','A telescope','A fossil brush'],correct:0}];let quizIndex=0,quizScore=0;
+function renderQuiz(){const root=document.querySelector('#quizContent');if(quizIndex>=QUESTIONS.length){root.innerHTML=`<p class="quiz-question">Challenge complete!</p><p class="overlay-sub">You scored <b>${quizScore} / ${QUESTIONS.length}</b>.</p><button class="gold-action" id="quizAgain">Play again</button>`;document.querySelector('#quizAgain').onclick=()=>{quizIndex=0;quizScore=0;renderQuiz()};return}const q=QUESTIONS[quizIndex];root.innerHTML=`<div class="helper-note">QUESTION ${quizIndex+1} / ${QUESTIONS.length}</div><p class="quiz-question">${q.q}</p><div class="quiz-answers">${q.a.map((answer,i)=>`<button class="quiz-answer" data-answer="${i}">${answer}</button>`).join('')}</div><div class="feedback" id="quizFeedback"></div>`;root.querySelectorAll('[data-answer]').forEach(btn=>btn.onclick=()=>{root.querySelectorAll('[data-answer]').forEach(b=>b.disabled=true);const correct=Number(btn.dataset.answer)===q.correct;if(correct)quizScore++;document.querySelector('#quizFeedback').textContent=correct?'Correct! Great dino knowledge.':`Not quite — ${q.a[q.correct]} is right.`;setTimeout(()=>{quizIndex++;renderQuiz()},1050)})}
+document.querySelector('#compileButton').addEventListener('click',async()=>{const button=document.querySelector('#compileButton'),status=document.querySelector('#compileStatus');button.disabled=true;status.textContent='Loading image compiler…';try{if(!window.MINDAR?.Compiler)await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';s.onload=resolve;s.onerror=reject;document.head.appendChild(s)});const images=await Promise.all(TARGETS.map(item=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error(`Missing assets/${item.marker}`));im.src=`./assets/${item.marker}`})));const compiler=new window.MINDAR.Compiler();await compiler.compileImageTargets(images,p=>status.textContent=`Building markers · ${Math.round(p*100)}%`);const data=await compiler.exportData(),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));a.download='targets.mind';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2500);status.textContent='Downloaded targets.mind. Replace assets/targets.mind and commit.'}catch(err){console.error(err);status.textContent=`Compile failed: ${err.message}`}finally{button.disabled=false}});
+</script>
 </body>
 </html>
