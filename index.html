@@ -23,7 +23,7 @@
     .help{border:0;background:none;color:#b7d2d4;font:500 12px 'DM Sans';margin-top:13px;padding:8px;cursor:pointer}.status{font-size:12px;color:#d1eee2;margin-top:13px;min-height:18px}.hide{display:none!important}
     .scanner-frame{position:fixed;z-index:3;left:50%;top:46%;transform:translate(-50%,-50%);width:min(74vw,310px);aspect-ratio:1;border:1px solid #c9ef7370;border-radius:25px;pointer-events:none;opacity:0;transition:opacity .35s;box-shadow:0 0 0 9999px #06172212}.scanner-frame:before,.scanner-frame:after{content:'';position:absolute;inset:-1px;border-radius:25px;border:2px solid transparent;border-top-color:var(--lime);border-left-color:var(--lime);width:27px;height:27px}.scanner-frame:after{inset:auto -1px -1px auto;border:0;border-right:2px solid var(--lime);border-bottom:2px solid var(--lime);width:27px;height:27px;border-radius:0 0 25px 0}.scanning .scanner-frame{opacity:1}
     .tip{position:fixed;z-index:4;top:calc(46% + min(39vw,165px));left:50%;transform:translateX(-50%);width:max-content;max-width:90vw;color:#e6f4ed;background:#071b2ab8;border:1px solid #ffffff24;border-radius:30px;padding:9px 14px;font-size:11px;opacity:0;transition:opacity .3s;pointer-events:none}.scanning .tip{opacity:1}.target-found .scanner-frame,.target-found .tip{opacity:0}
-    .hint-card{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);z-index:4;width:min(310px,80vw);padding:18px;border-radius:19px;text-align:center;background:#0a2330e8;border:1px solid #b7f3dc38;box-shadow:0 18px 50px #0006;pointer-events:none;display:none}.target-found .hint-card{display:block}.hint-card strong{display:block;font:600 15px 'Space Grotesk';margin:0 0 6px}.hint-card span{font-size:12px;color:#b4cbcc}
+    .hint-card{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);z-index:4;width:min(310px,80vw);padding:18px;border-radius:19px;text-align:center;background:#0a2330e8;border:1px solid #b7f3dc38;box-shadow:0 18px 50px #0006;pointer-events:auto;display:none}.target-found .hint-card{display:block}.hint-card strong{display:block;font:600 15px 'Space Grotesk';margin:0 0 6px}.hint-card span{font-size:12px;color:#b4cbcc}.sound-btn{margin:13px auto 0;border:1px solid #c9ef7380;border-radius:11px;padding:10px 16px;background:#c9ef73;color:#10242b;font:700 13px 'DM Sans';cursor:pointer}.sound-btn[hidden]{display:none}.sound-btn:active{transform:scale(.97)}
     .modal{position:fixed;inset:0;z-index:10;background:#03111bd9;display:none;align-items:flex-end;justify-content:center;padding:20px}.modal.open{display:flex}.modal-card{max-width:460px;width:100%;max-height:85vh;overflow:auto;background:#0b2634;border:1px solid #b7f3dc2b;border-radius:22px;padding:23px 21px 20px;box-shadow:0 20px 80px #0008}.modal-card h2{font:600 20px 'Space Grotesk';margin:0 0 10px}.modal-card p,.modal-card li{font-size:13px;line-height:1.55;color:#bdd0d1}.modal-card ol{padding-left:21px}.modal-card li{margin:8px 0}.modal-close{float:right;border:0;background:#ffffff12;color:#fff;border-radius:50%;width:31px;height:31px;font-size:18px;cursor:pointer}.model-path{font-family:monospace;color:var(--lime)!important;background:#03131d;padding:9px;border-radius:8px}
     .toast{position:fixed;z-index:8;top:80px;left:50%;transform:translate(-50%,-12px);padding:12px 16px;border:1px solid #ffffff2b;background:#0b2634ee;border-radius:13px;font-size:12px;text-align:center;width:max-content;max-width:90vw;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}@media(min-width:720px){.bottom-panel{padding-bottom:30px}.scanner-frame{width:300px}.tip{top:calc(46% + 163px)}}
   </style>
@@ -37,10 +37,10 @@
   </div>
   <header class="topbar"><div class="brand"><div class="brand-mark">◉</div><div><div class="brand-name">DINO DISCOVERY</div><div class="brand-sub">Multi-marker AR</div></div></div><div class="live-pill"><span class="dot"></span> IMAGE AR</div></header>
   <div class="scanner-frame"></div><div class="tip">Scan any of the four dinosaur pages</div>
-  <div class="hint-card"><strong id="foundName">Dinosaur found!</strong><span>Keep the marker inside the frame.</span></div>
+  <div class="hint-card"><strong id="foundName">Dinosaur found!</strong><span id="soundCaption">Tap Play sound to hear the dinosaur.</span><button class="sound-btn" id="playSoundButton" type="button" hidden>▶ Play sound</button></div>
   <main class="bottom-panel" id="panel"><div class="eyebrow">Bring the prehistoric world to life</div><h1 class="headline">Meet the dinosaurs.</h1><p class="subtitle">Scan any of the four book images and see its matching 3D model appear.</p><button class="primary" id="startButton"><span class="button-icon">⌾</span><span>Start AR camera</span></button><button class="help" id="helpButton">Setup &amp; model instructions</button><div class="status" id="status" aria-live="polite"></div></main>
   <div class="toast" id="toast"></div>
-  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal-card"><button class="modal-close" id="closeHelp" aria-label="Close">×</button><h2 id="helpTitle">Set up the four AR markers</h2><p>All four marker images are included in <code>assets/</code>. Compile them together into <b>one</b> MindAR file. The order in the compiled file is important:</p><ol><li><code>marker.jpg</code> → <code>model.glb</code> (target index 0)</li><li><code>marker1.jpg</code> → <code>model1.glb</code> (target index 1)</li><li><code>marker2.jpg</code> → <code>model2.glb</code> (target index 2)</li><li><code>marker3.jpg</code> → <code>model3.glb</code> (target index 3)</li></ol><p>Tap Compile markers to download a single <code>targets.mind</code>. Upload it to <code>assets/targets.mind</code> and commit. Add each matching GLB to <code>assets/</code> using the filenames above.</p><p>Sound files in <code>assets/</code>: <code>Tyrannosaur_Roar_1.mp3</code> plays for marker1; <code>Raptor_triple_call.mp3</code> plays for marker3. Sound stops when its marker is lost or a different marker is found. GLB animations play when embedded. Camera access needs HTTPS/localhost and permission.</p><button class="primary" id="compileButton" style="width:100%">Compile all 4 markers</button><div class="status" id="compileStatus"></div></div></div>
+  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal-card"><button class="modal-close" id="closeHelp" aria-label="Close">×</button><h2 id="helpTitle">Set up the four AR markers</h2><p>All four marker images are included in <code>assets/</code>. Compile them together into <b>one</b> MindAR file. The order in the compiled file is important:</p><ol><li><code>marker.jpg</code> → <code>model.glb</code> (target index 0)</li><li><code>marker1.jpg</code> → <code>model1.glb</code> (target index 1)</li><li><code>marker2.jpg</code> → <code>model2.glb</code> (target index 2)</li><li><code>marker3.jpg</code> → <code>model3.glb</code> (target index 3)</li></ol><p>Tap Compile markers to download a single <code>targets.mind</code>. Upload it to <code>assets/targets.mind</code> and commit. Add each matching GLB to <code>assets/</code> using the filenames above.</p><p>Sound files in <code>assets/</code>: <code>Tyrannosaur_Roar_1.mp3</code> plays for marker1; <code>Raptor_triple_call.mp3</code> plays for marker3. Scan a marker, then tap <b>Play sound</b> to hear its matching clip. GLB animations play when embedded. Camera access needs HTTPS/localhost and permission.</p><button class="primary" id="compileButton" style="width:100%">Compile all 4 markers</button><div class="status" id="compileStatus"></div></div></div>
   <script>
     const TARGETS = [
       { marker: 'marker.jpg', model: 'model.glb', name: 'Elasmosaurus', sound: null },
@@ -48,36 +48,63 @@
       { marker: 'marker2.jpg', model: 'model2.glb', name: 'Arizonasaurus', sound: null },
       { marker: 'marker3.jpg', model: 'model3.glb', name: 'Allosaurus', sound: 'Raptor_triple_call.mp3' }
     ];
-    // Put the two MP3 files in assets/ next to the marker and GLB files.
-    const soundPlayers = TARGETS.map(item => {
-      if (!item.sound) return null;
-      const audio = new Audio(`./assets/${item.sound}`);
-      audio.preload = 'auto';
-      audio.addEventListener('error', () => console.warn(`Could not load audio: assets/${item.sound}`));
-      return audio;
+    // Load/decode audio files early. Resume AudioContext from the Start AR tap so
+    // mobile browser autoplay rules allow playback when a marker is recognized.
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioContext = AudioContextClass ? new AudioContextClass() : null;
+    const soundLoads = TARGETS.map(item => {
+      if (!item.sound || !audioContext) return Promise.resolve(null);
+      return fetch(`./assets/${item.sound}`)
+        .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status} for ${item.sound}`); return response.arrayBuffer(); })
+        .then(data => audioContext.decodeAudioData(data))
+        .catch(error => { console.error(`Cannot load sound assets/${item.sound}`, error); return null; });
     });
     let playingSoundIndex = -1;
+    let activeSoundSource = null;
+    let soundRequest = 0;
     function stopSounds(){
-      soundPlayers.forEach(audio => { if(audio){audio.pause();audio.currentTime=0;} });
+      soundRequest++;
+      if (activeSoundSource) { try { activeSoundSource.stop(); } catch (_) {} activeSoundSource.disconnect(); activeSoundSource = null; }
       playingSoundIndex = -1;
     }
-    function playTargetSound(index){
+    async function playTargetSound(index){
       stopSounds();
-      const audio = soundPlayers[index];
-      if(!audio) return;
+      if (!TARGETS[index].sound || !audioContext) return;
+      const request = soundRequest;
       playingSoundIndex = index;
-      audio.currentTime = 0;
-      audio.play().catch(error => { console.warn('Browser blocked sound playback:',error); showToast('Sound blocked—tap the page and allow audio playback.'); });
+      const buffer = await soundLoads[index];
+      if (!buffer || request !== soundRequest || !found.has(index)) return;
+      try {
+        if (audioContext.state !== 'running') await audioContext.resume();
+        if (request !== soundRequest) return;
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        activeSoundSource = source;
+        source.onended = () => { if (activeSoundSource === source) { activeSoundSource = null; playingSoundIndex = -1; document.querySelector('#playSoundButton').textContent='▶ Play again'; } };
+        source.start(0);
+        document.querySelector('#playSoundButton').textContent='♪ Playing…';
+      } catch (error) { console.warn('Sound playback failed:', error); showToast('Sound could not play—tap Start AR and check device volume.'); }
     }
     const scene = document.querySelector('#arScene');
     const panel = document.querySelector('#panel');
     const statusEl = document.querySelector('#status');
     const toast = document.querySelector('#toast');
     const found = new Set();
+    let currentTargetIndex = -1;
     let isStarting = false;
     function say(message){ statusEl.textContent = message; }
     function showToast(message){ toast.textContent=message; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),3600); }
     function setScanning(on){ document.body.classList.toggle('scanning',on); panel.classList.toggle('hide',on); }
+    function setCurrentTarget(index){
+      currentTargetIndex=index;
+      const item=TARGETS[index];
+      document.querySelector('#foundName').textContent=`${item.name} found!`;
+      const button=document.querySelector('#playSoundButton');
+      const caption=document.querySelector('#soundCaption');
+      if(item.sound){button.hidden=false;button.textContent='▶ Play sound';caption.textContent=`Tap to hear the ${item.name} sound.`;}
+      else{button.hidden=true;caption.textContent='No sound clip added for this dinosaur yet.';}
+    }
     function createAnchor(item,index){
       const anchor=document.createElement('a-entity');
       anchor.setAttribute('mindar-image-target',`targetIndex: ${index}`);
@@ -96,8 +123,16 @@
           </a-entity>
           <a-ring position="0 -0.36 0" rotation="-90 0 0" radius-inner="0.40" radius-outer="0.405" material="color: #c9ef73; opacity: .8; shader: flat"></a-ring>
         </a-entity>`;
-      anchor.addEventListener('targetFound',()=>{found.add(index);document.body.classList.add('target-found');document.querySelector('#foundName').textContent=`${item.name} found!`;showToast(`${item.name} marker found`);playTargetSound(index);});
-      anchor.addEventListener('targetLost',()=>{found.delete(index);if(playingSoundIndex===index)stopSounds();if(found.size===0)document.body.classList.remove('target-found');});
+      anchor.addEventListener('targetFound',()=>{found.add(index);stopSounds();document.body.classList.add('target-found');setCurrentTarget(index);showToast(`${item.name} marker found`);});
+      anchor.addEventListener('targetLost',()=>{
+        found.delete(index);
+        if(playingSoundIndex===index)stopSounds();
+        if(currentTargetIndex===index){
+          const remaining=Array.from(found).pop();
+          if(remaining!==undefined)setCurrentTarget(remaining);
+          else{currentTargetIndex=-1;document.body.classList.remove('target-found');}
+        }
+      });
       const model=anchor.querySelector('.uploaded-model');
       model.addEventListener('model-loaded',(event)=>{
         model.setAttribute('visible','true');anchor.querySelector('.preview-creature').setAttribute('visible','false');
@@ -109,12 +144,20 @@
     function buildAnchors(){const root=document.querySelector('#targetAnchors');if(root.children.length)return;TARGETS.forEach((item,index)=>root.appendChild(createAnchor(item,index)));}
     if(scene.hasLoaded)buildAnchors();else scene.addEventListener('loaded',buildAnchors,{once:true});
     async function startAR(){
-      if(isStarting)return;isStarting=true;const button=document.querySelector('#startButton');button.disabled=true;button.querySelector('span:last-child').textContent='Checking setup…';
-      try{const response=await fetch('./assets/targets.mind',{method:'HEAD',cache:'no-store'});if(!response.ok){button.disabled=false;button.querySelector('span:last-child').textContent='Start AR camera';say('One-time setup needed: compile all four markers first.');document.querySelector('#helpModal').classList.add('open');isStarting=false;return;}
+      if(isStarting)return;
+      // Must be called directly from the Start button gesture for iOS/Android audio policies.
+      const resumeAudio = audioContext && audioContext.state !== 'running' ? audioContext.resume().catch(error=>console.warn('Audio unlock failed:',error)) : Promise.resolve();
+      isStarting=true;const button=document.querySelector('#startButton');button.disabled=true;button.querySelector('span:last-child').textContent='Checking setup…';
+      try{await resumeAudio;await Promise.all(soundLoads);const response=await fetch('./assets/targets.mind',{method:'HEAD',cache:'no-store'});if(!response.ok){button.disabled=false;button.querySelector('span:last-child').textContent='Start AR camera';say('One-time setup needed: compile all four markers first.');document.querySelector('#helpModal').classList.add('open');isStarting=false;return;}
         say('Allow camera access when your browser asks.');await scene.systems['mindar-image-system'].start();setScanning(true);say('Camera on — scan any dinosaur page.');
       }catch(error){console.error(error);say('Could not start AR. Use HTTPS or localhost and allow camera access.');showToast(error.message||'Camera could not start');button.disabled=false;button.querySelector('span:last-child').textContent='Try again';isStarting=false;}
     }
     document.querySelector('#startButton').addEventListener('click',startAR);
+    document.querySelector('#playSoundButton').addEventListener('click',()=>{
+      if(currentTargetIndex<0)return;
+      if(audioContext && audioContext.state!=='running')audioContext.resume().then(()=>playTargetSound(currentTargetIndex));
+      else playTargetSound(currentTargetIndex);
+    });
     document.querySelector('#helpButton').addEventListener('click',()=>document.querySelector('#helpModal').classList.add('open'));
     document.querySelector('#closeHelp').addEventListener('click',()=>document.querySelector('#helpModal').classList.remove('open'));
     document.querySelector('#helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')e.currentTarget.classList.remove('open')});
