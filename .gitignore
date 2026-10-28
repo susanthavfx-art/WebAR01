@@ -1,0 +1,12 @@
+node_modules/
+dist/
+site/
+.cache/
+.playwright-cli/
+test-results/
+playwright-report/
+*.log
+.DS_Store
+# End-to-end test screenshots are generated locally.
+tests/*.png
+tests/*.pdf

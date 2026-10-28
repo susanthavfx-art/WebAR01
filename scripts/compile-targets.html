@@ -1,0 +1,11 @@
+<!doctype html><html><body><p>Preparing Wonderlab tracking targets…</p><script type="module">
+import { a as Compiler } from '/src/vendor/controller-mGt1s8dJ.js';
+window.compileMarker = async (src) => {
+ const image = new Image(); image.src=src; await image.decode();
+ const compiler=new Compiler();
+ await compiler.compileImageTargets([image], (p)=>console.log(src, Math.round(p)));
+ const buffer=await compiler.exportData();
+ return Array.from(new Uint8Array(buffer));
+};
+window.compilerReady=true;
+</script></body></html>
