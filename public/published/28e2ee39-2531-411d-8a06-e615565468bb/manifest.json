@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "id": "28e2ee39-2531-411d-8a06-e615565468bb",
+  "title": "My AR Creation",
+  "mode": "shared",
+  "target": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/48aa4d84-64e2-48d3-9362-202723be7f4c.mind",
+  "cards": [
+    {
+      "id": "26c0bbce-06f9-4d27-9f8a-5b27dd86062d",
+      "title": "ankylosaurus",
+      "targetIndex": 0,
+      "marker": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/e00170cd-6da3-4da1-b77d-8b9f7283feff.jpg",
+      "scene": {
+        "version": 2,
+        "id": "9569c6a8-b46e-442f-8ecc-1b7c8efc8693",
+        "title": "ankylosaurus",
+        "objects": [
+          {
+            "id": "056698a9-192a-4bb9-8cd2-9ffab6255aff",
+            "assetId": "model:upload-a8957237-20b0-427a-a3e0-ee9030ed375c",
+            "model": {
+              "id": "upload-a8957237-20b0-427a-a3e0-ee9030ed375c",
+              "name": "ankylosaurus",
+              "category": "GLB Model",
+              "file": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/a8957237-20b0-427a-a3e0-ee9030ed375c.glb",
+              "height": 1.5,
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "animate": true
+            },
+            "name": "ankylosaurus",
+            "position": [
+              -0.9,
+              0,
+              0
+            ],
+            "rotation": [
+              -180,
+              87,
+              -180
+            ],
+            "scale": 1.35,
+            "animation": "none",
+            "visible": true,
+            "idleClip": 3,
+            "actions": [
+              {
+                "id": "dded2b21-138f-4e48-973a-8e72e81bba33",
+                "label": "Walk",
+                "clip": 7,
+                "sound": null,
+                "loop": true
+              },
+              {
+                "id": "ecbc4cc9-b16a-4e9f-b03a-01bc142720f3",
+                "label": "Attack",
+                "clip": 1,
+                "sound": null,
+                "loop": true
+              }
+            ]
+          }
+        ],
+        "cards": [
+          {
+            "id": "ec5d0a31-7a34-4493-9ddd-75a5418440cd",
+            "type": "text",
+            "title": "Ankylosaurus",
+            "text": "ඇන්කිලෝසෝරස් (Ankylosaurus) කියන්නේ මීට වසර මිලියන 68–66කට පමණ පෙර ක්‍රිටේසීය යුගයේ අවසාන කාලයේ ජීවත් වූ ශාකභක්ෂක ඩයිනෝසෝරයෙක්. 🦖 එයාගේ ශරීරය පුරා තිබුණු ශක්තිමත් අස්ථිමය තහඩු සන්නාහයක් වගේ ක්‍රියා කළ අතර, සතුරන්ගෙන් ආරක්ෂා වීමට උපකාරී වුණා. එයාගේ වඩාත්ම විශේෂ ලක්ෂණය වුණේ වලිගයේ අග තිබුණු මිටියක් වැනි විශාල අස්ථිමය ගැටයයි. එය ආරක්ෂාව සඳහා භාවිත කළ හැකි වුණා. ඇන්කිලෝසෝරස්ට කෙටි නමුත් ශක්තිමත් කකුල් හතරක් තිබුණු අතර, බරැති ශරීරය බිමට ආසන්නව තබාගෙන ඇවිදීමට ඒවා උපකාරී වුණා. එයා ප්‍රධාන වශයෙන් පහත් පැළෑටි සහ වෙනත් ශාක ආහාරයට ගත්තා. වැඩුණු ඇන්කිලෝසෝරස් කෙනෙක් දිගින් මීටර් 6–8ක් පමණ විය හැකි අතර, බර",
+            "color": "#f0bf2e",
+            "position": [
+              -6,
+              3.62,
+              -4.76
+            ],
+            "target": null,
+            "visible": true
+          }
+        ],
+        "updatedAt": "2026-10-29T10:40:14.052Z"
+      }
+    },
+    {
+      "id": "959a6abf-8038-4bfe-a060-58bfcf26ad6c",
+      "title": "pteranodon",
+      "targetIndex": 1,
+      "marker": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/c1156201-cbb2-4558-96a2-78172249846e.jpg",
+      "scene": {
+        "version": 2,
+        "id": "403c9153-8b3a-4807-9bc7-14250a940125",
+        "title": "pteranodon",
+        "objects": [
+          {
+            "id": "841d611a-dd53-405b-bd87-1f0694a0ae35",
+            "assetId": "model:upload-28c734ca-6aa2-4741-8624-166a7430794c",
+            "model": {
+              "id": "upload-28c734ca-6aa2-4741-8624-166a7430794c",
+              "name": "pteranodon",
+              "category": "GLB Model",
+              "file": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/28c734ca-6aa2-4741-8624-166a7430794c.glb",
+              "height": 1.5,
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "animate": true
+            },
+            "name": "pteranodon",
+            "position": [
+              -0.83,
+              0,
+              0
+            ],
+            "rotation": [
+              17,
+              21,
+              -13
+            ],
+            "scale": 2,
+            "animation": "none",
+            "visible": true,
+            "idleClip": 0
+          }
+        ],
+        "cards": [],
+        "updatedAt": "2026-10-29T10:15:34.210Z"
+      }
+    },
+    {
+      "id": "2eb71be6-5c69-4389-b776-b1a0201a2b3c",
+      "title": "triceratop",
+      "targetIndex": 2,
+      "marker": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/f6825412-6bc4-4b01-a531-04b594ac036e.jpg",
+      "scene": {
+        "version": 2,
+        "id": "329b246f-ca34-4ef4-bce5-b48964912a98",
+        "title": "triceratop",
+        "objects": [
+          {
+            "id": "62bf28f3-7856-44cd-bf51-6f1e486b335f",
+            "assetId": "model:upload-aee8c3b3-4e8d-4cf9-9faf-f3a115c65e23",
+            "model": {
+              "id": "upload-aee8c3b3-4e8d-4cf9-9faf-f3a115c65e23",
+              "name": "triceratop",
+              "category": "GLB Model",
+              "file": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/aee8c3b3-4e8d-4cf9-9faf-f3a115c65e23.glb",
+              "height": 1.5,
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "animate": true
+            },
+            "name": "triceratop",
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "scale": 1.55,
+            "animation": "none",
+            "visible": true
+          }
+        ],
+        "cards": [],
+        "updatedAt": "2026-10-29T10:22:28.615Z"
+      }
+    },
+    {
+      "id": "81ca94a5-a751-4562-b6b9-8ae210d70b9f",
+      "title": "velociraptor",
+      "targetIndex": 3,
+      "marker": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/8d91d9ff-5e16-4123-87ae-a5d62154d9d9.jpg",
+      "scene": {
+        "version": 2,
+        "id": "9204a7b6-c93e-4f58-803e-bef47e48d59f",
+        "title": "velociraptor",
+        "objects": [
+          {
+            "id": "978e2ccc-e41f-4f55-be07-bd93a3252e34",
+            "assetId": "model:upload-ecb35e21-4a0f-4037-9c0b-b3c63e85ce95",
+            "name": "velociraptor",
+            "model": {
+              "id": "upload-ecb35e21-4a0f-4037-9c0b-b3c63e85ce95",
+              "name": "velociraptor",
+              "category": "GLB Model",
+              "file": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/ecb35e21-4a0f-4037-9c0b-b3c63e85ce95.glb",
+              "height": 1.5,
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "animate": true
+            },
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "scale": 1.1,
+            "animation": "none",
+            "visible": true
+          }
+        ],
+        "cards": [],
+        "updatedAt": "2026-10-29T10:22:33.799Z"
+      }
+    },
+    {
+      "id": "905f8b05-48c9-42bc-ba0e-bcf989373dbb",
+      "title": "stegosaurus",
+      "targetIndex": 4,
+      "marker": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/fe64215a-783e-4381-856e-1a4c9fee6410.jpg",
+      "scene": {
+        "version": 2,
+        "id": "e37f0760-9920-4830-bf4c-ade73281027f",
+        "title": "stegosaurus",
+        "objects": [
+          {
+            "id": "2a31dcaa-9c41-457d-bf10-57a2589a5dcd",
+            "assetId": "model:upload-254739e7-9a3b-499c-b4d3-91b93f807c23",
+            "name": "stegosaurus",
+            "model": {
+              "id": "upload-254739e7-9a3b-499c-b4d3-91b93f807c23",
+              "name": "stegosaurus",
+              "category": "GLB Model",
+              "file": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/254739e7-9a3b-499c-b4d3-91b93f807c23.glb",
+              "height": 1.5,
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "animate": true
+            },
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "scale": 1.75,
+            "animation": "none",
+            "visible": true,
+            "idleClip": 1,
+            "actions": [
+              {
+                "id": "f02706f4-57c2-470e-8a1b-4246c63b178e",
+                "label": "walk",
+                "clip": 4,
+                "sound": null,
+                "loop": true
+              },
+              {
+                "id": "281e7095-6cd5-41bd-accf-34c347c33473",
+                "label": "Attack",
+                "clip": 5,
+                "sound": null,
+                "loop": true
+              },
+              {
+                "id": "7a44081c-27fa-4bff-aa3a-c4d5ae090b52",
+                "label": "Shake",
+                "clip": 3,
+                "sound": null,
+                "loop": true
+              }
+            ]
+          }
+        ],
+        "cards": [
+          {
+            "id": "9d6602fc-e12d-4650-a0c2-55b4d35c8307",
+            "type": "text",
+            "title": "Stegosaurus",
+            "text": "Stegosaurus (ස්ටෙගොසෝරස්) කියන්නේ මීට වසර මිලියන 150කට පමණ පෙර ජුරාසික් යුගයේ ජීවත් වූ ශාකභක්ෂක ඩයිනෝසෝරයෙක්. එයාගේ පිටේ තිබුණු විශාල තහඩු සහ වලිගයේ තියුණු කටු නිසා හඳුනාගන්න හරිම ලේසියි!",
+            "color": "#f0bf2e",
+            "position": [
+              -5,
+              3.13,
+              -5.31
+            ],
+            "target": null,
+            "visible": true
+          },
+          {
+            "id": "ef9c9018-54c0-4d97-bab7-77edc56ac7e7",
+            "type": "image",
+            "title": "Look closer",
+            "text": "Take a closer look at this picture.",
+            "color": "#7cc443",
+            "position": [
+              -0.67,
+              1.52,
+              -5.41
+            ],
+            "target": null,
+            "visible": true,
+            "media": {
+              "url": "published/28e2ee39-2531-411d-8a06-e615565468bb/files/6f0bca64-f1b0-405c-b0a3-07766b387a7b.jpg",
+              "name": "stegosaurus-size.jpg",
+              "mime": "image/jpeg",
+              "size": 60152
+            }
+          }
+        ],
+        "updatedAt": "2026-10-29T10:36:41.731Z"
+      }
+    }
+  ]
+}
