@@ -24,12 +24,15 @@ export function loadMiniProjects() {
     if (!Array.isArray(list)) return [];
     return list
       .filter((p) => UUID.test(p?.id || "") && Array.isArray(p.entries))
-      .slice(0, MAX_MINIS)
       .map((p) => ({
         id: p.id,
         title: cleanTitle(p.title, "My mini project"),
         mode: p.mode === "individual" ? "individual" : "shared",
         sharedTarget: p.sharedTarget || null,
+        ...(typeof p.trackerSignature === "string" &&
+        p.trackerSignature.length < 20000
+          ? { trackerSignature: p.trackerSignature }
+          : {}),
         entries: p.entries
           .filter(
             (e) => UUID.test(e?.id || "") && typeof e.sceneId === "string",
@@ -53,10 +56,7 @@ export function loadMiniProjects() {
 }
 export function saveMiniProjects(projects) {
   try {
-    localStorage.setItem(
-      MINI_KEY,
-      JSON.stringify(projects.slice(0, MAX_MINIS)),
-    );
+    localStorage.setItem(MINI_KEY, JSON.stringify(projects));
     return true;
   } catch {
     return false;
@@ -190,21 +190,23 @@ export function normalisePublicBase(value) {
   if (!url.pathname.endsWith("/")) url.pathname += "/";
   return url.href;
 }
-export function collectionUrl(base, publicationId, cardId = "") {
+export function collectionUrl(base, publicationId, cardId = "", options = {}) {
   const url = new URL(normalisePublicBase(base));
   url.hash = new URLSearchParams({
     page: "collection",
     p: publicationId,
     ...(cardId ? { c: cardId } : {}),
+    ...(options.cameraDirect ? { camera: "1" } : {}),
   }).toString();
   return url.href;
 }
-export function draftUrl(mini, cardId = "") {
+export function draftUrl(mini, cardId = "", options = {}) {
   const url = new URL(publicUrl(""), window.location.origin);
   url.hash = new URLSearchParams({
     page: "collection",
     draft: mini.id,
     ...(cardId ? { c: cardId } : {}),
+    ...(options.cameraDirect ? { camera: "1" } : {}),
   }).toString();
   return url.href;
 }
@@ -299,8 +301,8 @@ async function printablePdf(mini, qrList) {
     pdf.setFontSize(12);
     pdf.text(
       [
-        "Scan this QR on your phone, then start the AR camera.",
-        "Point the camera at any printed card in this set.",
+        "Scan this QR on your phone and allow camera access.",
+        "If asked, tap Start AR camera, then point at a printed card.",
         "Publish the exported project before testing the QR.",
       ],
       20,
@@ -351,6 +353,7 @@ export async function createPublication(
   projects,
   base,
   onProgress = () => {},
+  options = {},
 ) {
   const problems = miniProblems(mini, projects);
   if (problems.length) throw new Error(problems[0]);
@@ -447,7 +450,7 @@ export async function createPublication(
       ? [{ title: mini.title, cardId: "" }]
       : mini.entries.map((e) => ({ title: e.title, cardId: e.id }));
   for (const item of qrEntries) {
-    const link = collectionUrl(publicBase, id, item.cardId);
+    const link = collectionUrl(publicBase, id, item.cardId, options);
     const data = await QRCode.toDataURL(link, {
       width: 600,
       margin: 3,
@@ -462,7 +465,7 @@ export async function createPublication(
   }
   files["printable-marker-sheets.pdf"] = await printablePdf(mini, qrList);
   files["READ-ME-FIRST.txt"] = textBytes(
-    `WONDERLAB MINI PROJECT: ${mini.title}\n\n1. Upload the included public/published/${id}/ folder into the SAME location in your WebAR01 repository.\n2. Deploy the studio using its GitHub Pages workflow. Wait for the build to finish.\n3. Your QR codes then open the studio at: ${publicBase}\n4. Print printable-marker-sheets.pdf at 100% and test on a phone over HTTPS.\n\nThe QR opens the viewer; the illustration is the tracking marker.\nTarget indices must match the image order used when compiling the .mind file.\nThis package is a snapshot. Exporting again creates a new publication and new QR codes.\nAnyone with a QR link can access these public files.\n`,
+    `WONDERLAB PUBLICATION: ${mini.title}\n\n1. Copy the included public/published/${id}/ folder into the SAME location in your studio source repository.\n2. Commit and deploy the studio using its GitHub Pages workflow. Wait for the build to finish.\n3. Your QR codes then open the studio at: ${publicBase}\n4. Print printable-marker-sheets.pdf at 100% and test on a phone over HTTPS. Allow camera access; if asked, tap Start AR camera.\n\nThe QR opens the viewer; the illustration is the tracking marker.\nTarget indices must match the image order used when compiling the .mind file.\nGitHub's browser uploader has a 25 MB per-file limit. Use Git or GitHub Desktop for larger files within GitHub's limits.\nThis package is a snapshot. Exporting again creates a new publication and new QR codes.\nAnyone with a QR link can access these public files.\n`,
   );
   onProgress("Packing your project…");
   const { zip } = await import("fflate");
@@ -597,5 +600,5 @@ export async function loadCollectionFromLocation() {
   }
   if (!resolveResourceUrl(collection.target))
     throw new Error("The tracking target is unavailable on this device.");
-  return collection;
+  return { ...collection, autoStartCamera: params.get("camera") === "1" };
 }

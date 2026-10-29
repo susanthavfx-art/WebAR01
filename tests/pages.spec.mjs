@@ -60,9 +60,11 @@ test("GitHub project subfolder: assets, fresh share loads and in-tab hash routin
   await expect(home).toHaveAttribute("href", appPath);
   await home.click();
   await expect(
-    page.getByRole("heading", { name: "Little projects. Big magic." }),
+    page.getByRole("heading", { name: "Create your first card" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await expect(page.getByLabel("Flashcard set name")).toBeVisible();
+  // The original single-scene editor is still available to existing users.
+  await page.goto(`${appPath}?studio=1`);
   await expect(page.getByLabel("Project title")).toBeVisible();
   expect(new URL(page.url()).pathname).toBe(appPath);
   expect((await request.get(`${appPath}view`)).status()).toBe(404);

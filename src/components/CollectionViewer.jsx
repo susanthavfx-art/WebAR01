@@ -62,7 +62,9 @@ export default function CollectionViewer() {
 }
 
 function CollectionExperience({ collection }) {
-  const [mode, setMode] = useState("intro"),
+  const [mode, setMode] = useState(() =>
+      collection.autoStartCamera ? "ar" : "intro",
+    ),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(""),
     [ready, setReady] = useState(false),

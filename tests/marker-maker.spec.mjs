@@ -191,6 +191,7 @@ test("teacher makes a marker from a photo and text, saves it, and students track
 
   // Publish a short lesson link and print the matching sheet.
   await page.getByRole("button", { name: "Publish & share" }).click();
+  await expect(page.locator("#share-link")).toHaveValue(/lesson=/);
   const link = await page.locator("#share-link").inputValue();
   expect(link).toContain("lesson=");
   await expect(page.getByAltText("Selected tracking marker")).toHaveAttribute(

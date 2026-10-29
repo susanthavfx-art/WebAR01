@@ -228,6 +228,76 @@ export async function combineMindFiles(files, onProgress = () => {}) {
   );
 }
 
+// Each card contributes exactly one selected target to the shared tracker.
+// This is important when a precompiled .mind file contains multiple targets:
+// concatenating the whole files would shift indices or duplicate markers.
+export async function combineCardMindTargets(entries, onProgress = () => {}) {
+  if (!Array.isArray(entries) || !entries.length || entries.length > 50)
+    throw new Error("Add between 1 and 50 cards first.");
+  const { encode } = await import("@msgpack/msgpack");
+  const cache = new Map();
+  const remaining = new Map();
+  for (const entry of entries) {
+    const id = localRecord(entry.sourceMind?.ref)?.id;
+    if (id) remaining.set(id, (remaining.get(id) || 0) + 1);
+  }
+  const fingerprints = new Map();
+  const targets = [];
+  let targetBytes = 0;
+  for (const [position, entry] of entries.entries()) {
+    const record = localRecord(entry.sourceMind?.ref);
+    if (!record || record.kind !== "target")
+      throw new Error(`${entry.title}: upload its matching .mind file.`);
+    const index = entry.sourceTargetIndex;
+    if (!Number.isInteger(index) || index < 0 || index >= record.targetCount)
+      throw new Error(
+        `${entry.title}: choose the matching target inside its .mind file.`,
+      );
+    onProgress(`Preparing target ${position + 1} of ${entries.length}…`);
+    let data = cache.get(record.id);
+    if (!data) {
+      data = await readTarget(
+        new File([record.blob], record.name, { type: record.type }),
+      );
+      if (remaining.get(record.id) > 1) cache.set(record.id, data);
+    }
+    remaining.set(record.id, remaining.get(record.id) - 1);
+    if (!remaining.get(record.id)) cache.delete(record.id);
+    const target = data.dataList[index];
+    // Reject an oversized result before allocating the final combined buffer.
+    const encodedTarget = encode(target);
+    targetBytes += encodedTarget.byteLength;
+    if (targetBytes > 100 * 1024 * 1024)
+      throw new Error(
+        "The combined target file is over 100 MB. Use fewer cards or smaller compiled markers.",
+      );
+    // Identical target descriptors cannot reliably distinguish two cards. A
+    // useful error is safer than publishing a QR that shows the wrong model.
+    const digest = await crypto.subtle.digest("SHA-256", encodedTarget);
+    const fingerprint = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    if (fingerprints.has(fingerprint))
+      throw new Error(
+        `${entry.title} and ${fingerprints.get(fingerprint)} use the same .mind target. Choose a different marker target for each card.`,
+      );
+    fingerprints.set(fingerprint, entry.title);
+    targets.push(target);
+  }
+  onProgress("Building the one-camera target file…");
+  const bytes = encode({ v: 2, dataList: targets });
+  if (bytes.byteLength > 100 * 1024 * 1024)
+    throw new Error(
+      "The combined target file is over 100 MB. Use fewer cards or smaller compiled markers.",
+    );
+  return saveLocalFile(
+    new File([bytes], "flashcard-targets.mind", {
+      type: "application/octet-stream",
+    }),
+    "target",
+  );
+}
+
 export async function saveLocalFile(file, kind) {
   const config = FILE_TYPES[kind];
   if (!file || !config) throw new Error("Choose a file first.");

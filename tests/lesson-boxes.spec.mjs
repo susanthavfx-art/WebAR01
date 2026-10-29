@@ -115,12 +115,24 @@ test("teacher adds text, link and audio boxes, points them at a model and shares
   await page.getByRole("button", { name: "Add audio box" }).click();
   await expect(
     page.getByText(
-      "Files save on this device. Export a mini project before sharing.",
+      "Files save on this device. Publish the set before sharing.",
     ),
   ).toBeVisible();
   await expect(canvasCard(page, "Listen and learn")).toContainText(
     "Add a voice or audio file",
   );
+  // Wait for this specific edit to reach localStorage rather than observing
+  // the previous edit's transient "Saved" label during React's save effect.
+  await expect
+    .poll(() =>
+      page.evaluate((key) => {
+        const project = JSON.parse(localStorage.getItem(key) || "[]").find(
+          (item) => item.id === "lesson-project",
+        );
+        return project?.cards?.length || 0;
+      }, key),
+    )
+    .toBe(3);
   await saved(page);
   await page.reload();
   await page.getByRole("button", { name: "Lesson 3" }).click();

@@ -58,6 +58,15 @@ test("authoring: library, transforms, history, animations, markers and local per
     .click();
   await page.getByLabel("Project title").fill("Our curious classroom");
   await page.getByLabel("Project title").blur();
+  // Observe this edit in storage, not the previous save indicator state.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (k) => JSON.parse(localStorage.getItem(k))[0]?.markerId,
+        key,
+      ),
+    )
+    .toBe("forest-friends");
   await settle(page);
   const state = await page.evaluate(
     (k) => JSON.parse(localStorage.getItem(k)),

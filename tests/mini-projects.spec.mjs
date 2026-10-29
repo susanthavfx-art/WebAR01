@@ -20,7 +20,7 @@ async function combinedMind() {
   };
 }
 async function enterMini(page, name = "Dinosaur flash cards", mode = "shared") {
-  await page.goto(base);
+  await page.goto(`${base}?legacy=1`);
   await page
     .getByRole("button", { name: "Mini projects", exact: true })
     .click();
@@ -703,7 +703,7 @@ test("temporary Arena previews do not become the default public QR address", asy
     });
     await route.fulfill({ response });
   });
-  await page.goto(`https://preview.e2b.app${base}`);
+  await page.goto(`https://preview.e2b.app${base}?legacy=1`);
   await page.getByRole("button", { name: "New mini project" }).click();
   await page.getByLabel("Mini project name").fill("Preview address");
   await page

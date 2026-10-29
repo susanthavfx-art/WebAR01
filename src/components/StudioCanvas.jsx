@@ -37,6 +37,7 @@ const StudioCanvas = forwardRef(function StudioCanvas(
     tool = "select",
     grid = true,
     markerVisible = false,
+    markerImage = "",
     playing = false,
     viewOnly = false,
     onReady,
@@ -514,8 +515,7 @@ const StudioCanvas = forwardRef(function StudioCanvas(
       controls.update();
       const p = props.current;
       let acting = false;
-      for (const m of models.values())
-        if (isActing(m.group)) acting = true;
+      for (const m of models.values()) if (isActing(m.group)) acting = true;
       if (!needsRender && !p.playing && !e.dragging && !e.cardDrag && !acting)
         return;
       if ((p.playing || acting) && !e.dragging) {
@@ -682,7 +682,7 @@ const StudioCanvas = forwardRef(function StudioCanvas(
     if (!e) return;
     let cancelled = false;
     const texture = new THREE.TextureLoader().load(
-      getMarker(project.markerId).image,
+      markerImage || getMarker(project.markerId).image,
       (t) => {
         if (cancelled) {
           t.dispose();
@@ -698,7 +698,7 @@ const StudioCanvas = forwardRef(function StudioCanvas(
       cancelled = true;
       texture.dispose();
     };
-  }, [project.markerId]);
+  }, [project.markerId, markerImage]);
   return (
     <div
       ref={host}

@@ -204,7 +204,7 @@ export function loadProjects() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
     if (Array.isArray(saved))
-      return saved.slice(0, 300).flatMap((project) => {
+      return saved.flatMap((project) => {
         try {
           return [validateProject(project)];
         } catch {
@@ -218,7 +218,7 @@ export function loadProjects() {
 }
 export function saveProjects(projects) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects.slice(0, 300)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
     return true;
   } catch {
     return false;

@@ -146,7 +146,7 @@ function TeacherAccount({ session, onSignIn }) {
         <CloudOff size={16} />
         <span>
           <strong>Files save on this device</strong>
-          <small>Export a mini project to share uploaded media.</small>
+          <small>Publish a set to share uploaded media.</small>
         </span>
       </div>
     );
@@ -393,7 +393,7 @@ function ImageField({ card, update, notify }) {
           size: saved.size,
         },
       });
-      notify("Image added. Export your mini project to share local files.");
+      notify("Image added. Publish your set to share local files.");
     } catch (e) {
       setError(e.message);
     } finally {
@@ -714,8 +714,8 @@ export function MediaField({
         <>
           {!cloudEnabled() && (
             <p className="media-notice">
-              <CloudOff size={14} /> Files save on this device. Export a mini
-              project before sharing.
+              <CloudOff size={14} /> Files save on this device. Publish the set
+              before sharing.
             </p>
           )}
           {cloudEnabled() && !session && (
