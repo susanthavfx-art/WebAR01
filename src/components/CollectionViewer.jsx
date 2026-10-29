@@ -1,0 +1,751 @@
+import React, { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Box,
+  Camera,
+  Check,
+  ChevronRight,
+  HelpCircle,
+  LoaderCircle,
+  Minus,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import StudioCanvas from "./StudioCanvas";
+import { IconButton, Logo } from "./UI";
+import { CardOverlay, LessonCardSheet, positionCards } from "./LessonCards";
+import { ActionBar } from "./ModelActions";
+import {
+  addLights,
+  applyObjectTransform,
+  createAsset,
+  disposeGroup,
+  tickModel,
+} from "../lib/assets";
+import {
+  actionOffsets,
+  playAction,
+  setIdleClip,
+  stopAllSounds,
+  validIdleClip,
+} from "../lib/model-actions";
+import { loadCollectionFromLocation } from "../lib/workspace";
+import { resolveResourceUrl } from "../lib/local-files";
+import { APP_BASE } from "../lib/deployment";
+
+function LoadingScreen() {
+  return (
+    <main className="library-boot">
+      <Logo full />
+      <LoaderCircle size={26} className="spin" />
+      <p>Opening AR camera…</p>
+    </main>
+  );
+}
+
+function ErrorScreen({ message }) {
+  return (
+    <main className="viewer-page">
+      <header className="viewer-header">
+        <a href={APP_BASE} aria-label="WonderLab Studio">
+          <Logo small />
+        </a>
+      </header>
+      <div className="viewer-error-box">
+        <AlertTriangle size={30} />
+        <h1>Could not open this AR link</h1>
+        <p>{message}</p>
+        <a className="button primary" href={APP_BASE}>
+          Back to Studio
+        </a>
+      </div>
+    </main>
+  );
+}
+
+export default function CollectionViewer() {
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    loadCollectionFromLocation()
+      .then((collection) => active && setResult({ collection }))
+      .catch(
+        (error) =>
+          active &&
+          setResult({
+            error: error?.message || "This AR collection could not be opened.",
+          }),
+      );
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!result) return <LoadingScreen />;
+  if (result.error) return <ErrorScreen message={result.error} />;
+  return <CollectionExperience collection={result.collection} />;
+}
+
+function CollectionExperience({ collection }) {
+  const [mode, setMode] = useState(() =>
+    collection.autoStartCamera ? "ar" : "intro",
+  );
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState("");
+  const [ready, setReady] = useState(false);
+  const [activeId, setActiveId] = useState(null);
+  const [selectedId, setSelectedId] = useState(collection.cards[0].id);
+  const [openCard, setOpenCard] = useState(null);
+  const [tips, setTips] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [looping, setLooping] = useState({});
+  const [soundError, setSoundError] = useState("");
+
+  const cameraHost = useRef(null);
+  const runtime = useRef(null);
+  const arCards = useRef({});
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
+
+  const active = collection.cards.find((card) => card.id === activeId);
+  const selected =
+    collection.cards.find((card) => card.id === selectedId) ||
+    collection.cards[0];
+  const compact =
+    typeof window !== "undefined" &&
+    !!window.matchMedia?.("(max-width: 720px)").matches;
+
+  useEffect(() => {
+    if (runtime.current?.content) {
+      runtime.current.content.scale.setScalar(scale / 5.2);
+    }
+  }, [scale]);
+
+  useEffect(() => {
+    if (!soundError) return;
+    const timer = setTimeout(() => setSoundError(""), 4000);
+    return () => clearTimeout(timer);
+  }, [soundError]);
+
+  function playCurrent(object, action) {
+    const state = runtime.current;
+    const card = collection.cards.find((c) => c.id === state?.loadedId);
+    const index =
+      card?.scene.objects.findIndex((item) => item.id === object.id) ?? -1;
+    const model = state?.content?.children[index];
+    if (!model) return;
+    const result = playAction(model, action, () =>
+      setSoundError(
+        "A sound could not play. Check your phone is not on silent.",
+      ),
+    );
+    setLooping((old) => {
+      const next = { ...old };
+      if (result === "loop") next[object.id] = action.id;
+      else delete next[object.id];
+      return next;
+    });
+  }
+
+  const playRef = useRef(playCurrent);
+  playRef.current = playCurrent;
+
+  useEffect(() => {
+    if (mode !== "ar") return;
+    let disposed = false;
+    let cleaned = false;
+    let mindar = null;
+    let stream = null;
+    let timer = null;
+    let timeout = null;
+    const abort = new AbortController();
+    const state = {
+      activeId: null,
+      loadedId: null,
+      content: null,
+      anchor: null,
+    };
+    runtime.current = state;
+
+    let tapPoint = null;
+    const tapStart = (event) => {
+      tapPoint = { x: event.clientX, y: event.clientY };
+    };
+    const tapEnd = (event) => {
+      const start = tapPoint;
+      tapPoint = null;
+      if (
+        !start ||
+        !mindar?.renderer ||
+        !state.content ||
+        !state.activeId ||
+        Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10
+      ) {
+        return;
+      }
+      const rect = mindar.renderer.domElement.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const pointer = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(pointer, mindar.camera);
+      let hit = raycaster.intersectObjects(
+        state.content.children.filter((model) => model.visible),
+        true,
+      )[0]?.object;
+      while (hit && hit.parent !== state.content) hit = hit.parent;
+      const card = collection.cards.find((item) => item.id === state.activeId);
+      const object = card?.scene.objects[state.content.children.indexOf(hit)];
+      if (object?.actions?.length) playRef.current(object, object.actions[0]);
+    };
+
+    const disposeContent = () => {
+      if (!state.content) return;
+      state.content.parent?.remove(state.content);
+      disposeGroup(state.content);
+      state.content = null;
+      state.loadedId = null;
+    };
+
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      mindar?.renderer?.setAnimationLoop(null);
+      try {
+        mindar?.controller?.stopProcessVideo();
+      } catch {}
+      try {
+        mindar?.controller?.worker?.terminate();
+      } catch {}
+      if (mindar?._boundResize) {
+        window.removeEventListener("resize", mindar._boundResize);
+      }
+      mindar?.video?.srcObject?.getTracks().forEach((track) => track.stop());
+      stream?.getTracks().forEach((track) => track.stop());
+      mindar?.video?.remove();
+      disposeContent();
+      mindar?.renderer?.dispose();
+      mindar?.renderer?.domElement?.remove();
+      mindar?.cssRenderer?.domElement?.remove();
+      cameraHost.current?.removeEventListener("pointerdown", tapStart);
+      cameraHost.current?.removeEventListener("pointerup", tapEnd);
+      stopAllSounds();
+      if (runtime.current === state) runtime.current = null;
+    };
+
+    const activate = (card, anchor) => {
+      if (disposed) return;
+      if (state.loadedId !== card.id || !state.content) {
+        const switchedCard = state.loadedId && state.loadedId !== card.id;
+        disposeContent();
+        stopAllSounds();
+        setLooping({});
+        if (switchedCard) setOpenCard(null);
+
+        const group = new THREE.Group();
+        group.rotation.x = Math.PI / 2;
+        group.scale.setScalar(scaleRef.current / 5.2);
+        anchor.group.add(group);
+        state.content = group;
+        state.anchor = anchor;
+        state.loadedId = card.id;
+
+        card.scene.objects.forEach((object) => {
+          const model = createAsset(object.assetId, object.color, object.model);
+          applyObjectTransform(model, object);
+          setIdleClip(model, validIdleClip(object.idleClip));
+          group.add(model);
+        });
+
+        Promise.all(group.children.map((model) => model.userData.ready)).then(
+          () => {
+            if (disposed || state.content !== group) return;
+            const failed = group.children.find(
+              (model) => model.visible && model.userData.loadError,
+            );
+            if (failed) {
+              setSoundError(
+                `A model could not load: ${failed.userData.loadError}`,
+              );
+            }
+          },
+        );
+      } else if (state.content.parent !== anchor.group) {
+        anchor.group.add(state.content);
+        state.anchor = anchor;
+      }
+      state.activeId = card.id;
+      setActiveId(card.id);
+    };
+
+    const start = async () => {
+      try {
+        setError("");
+        setReady(false);
+        setActiveId(null);
+        setLoading("Starting AR camera…");
+        if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+          throw new Error(
+            "Open this QR link in Chrome or Safari over HTTPS to use your camera.",
+          );
+        }
+        const { MindARThree } =
+          await import("../vendor/mindar-image-three.prod.js");
+        if (disposed) return;
+
+        const targetUrl = resolveResourceUrl(collection.target);
+        const response = await fetch(targetUrl, { signal: abort.signal });
+        if (
+          !response.ok ||
+          (response.headers.get("content-type") || "").includes("text/html")
+        ) {
+          throw new Error(
+            "The .mind tracking file could not be loaded. Make sure the published folder is deployed.",
+          );
+        }
+        if (disposed) return;
+
+        mindar = new MindARThree({
+          container: cameraHost.current,
+          imageTargetSrc: targetUrl,
+          uiLoading: "no",
+          uiScanning: "no",
+          uiError: "no",
+          maxTrack: 1,
+          filterMinCF: 0.001,
+          filterBeta: 1000,
+          warmupTolerance: 3,
+          missTolerance: 5,
+        });
+        mindar.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
+        mindar.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        mindar.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        mindar.renderer.toneMappingExposure = 1.1;
+        mindar.cssRenderer.domElement.style.pointerEvents = "none";
+
+        mindar._startVideo = async () => {
+          const video = document.createElement("video");
+          video.autoplay = true;
+          video.muted = true;
+          video.playsInline = true;
+          video.setAttribute("playsinline", "");
+          video.style.position = "absolute";
+          mindar.video = video;
+          cameraHost.current?.appendChild(video);
+          setLoading("Allow camera access to scan your markers…");
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          });
+          if (disposed) {
+            stream.getTracks().forEach((track) => track.stop());
+            throw new DOMException("Camera stopped", "AbortError");
+          }
+          video.srcObject = stream;
+          await video.play();
+          if (!video.videoWidth) {
+            await new Promise((resolve, reject) => {
+              video.onloadedmetadata = resolve;
+              video.onerror = reject;
+            });
+          }
+          video.width = video.videoWidth;
+          video.height = video.videoHeight;
+          setLoading("Loading marker trackers…");
+        };
+
+        addLights(mindar.scene, false);
+
+        collection.cards.forEach((card) => {
+          const anchor = mindar.addAnchor(card.targetIndex);
+          anchor.onTargetFound = () => activate(card, anchor);
+          anchor.onTargetLost = () => {
+            if (disposed || state.activeId !== card.id) return;
+            state.activeId = null;
+            setActiveId(null);
+            stopAllSounds();
+            setLooping({});
+          };
+        });
+
+        cameraHost.current?.addEventListener("pointerdown", tapStart);
+        cameraHost.current?.addEventListener("pointerup", tapEnd);
+
+        await Promise.race([
+          mindar.start(),
+          new Promise((_, reject) => {
+            timer = setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    "Camera setup took too long. Tap Start AR camera to try again.",
+                  ),
+                ),
+              35000,
+            );
+          }),
+        ]);
+        clearTimeout(timer);
+        if (disposed) {
+          cleanup();
+          return;
+        }
+        setReady(true);
+        setLoading("");
+
+        const started = performance.now();
+        let last = started;
+        mindar.renderer.setAnimationLoop(() => {
+          if (disposed) return;
+          const now = performance.now();
+          const delta = (now - last) / 1000;
+          const t = (now - started) / 1000;
+          last = now;
+
+          const card = collection.cards.find(
+            (item) => item.id === state.activeId,
+          );
+          const group = state.content;
+          if (card && group) {
+            card.scene.objects.forEach((object, i) => {
+              const model = group.children[i];
+              if (!model) return;
+              if (model.visible) tickModel(model, delta);
+              const fx = actionOffsets(model, now / 1000);
+              model.position.y =
+                object.position[1] +
+                (object.animation === "float"
+                  ? Math.sin(t * 1.6 + i) * 0.12
+                  : 0) +
+                fx.y * object.scale;
+              model.rotation.y =
+                (object.rotation[1] * Math.PI) / 180 +
+                (object.animation === "spin" ? t * 0.28 : 0) +
+                fx.rot;
+              model.rotation.z =
+                (object.rotation[2] * Math.PI) / 180 + fx.tilt;
+              model.scale.setScalar(object.scale * fx.scale);
+            });
+
+            if (card.scene.cards?.length && state.anchor?.group.visible) {
+              const host = cameraHost.current;
+              positionCards(
+                arCards,
+                mindar.camera,
+                host?.clientWidth || 0,
+                host?.clientHeight || 0,
+                {
+                  card(box, target) {
+                    group.localToWorld(target.fromArray(box.position));
+                    return true;
+                  },
+                  anchor(box, target) {
+                    const index = card.scene.objects.findIndex(
+                      (o) => o.id === box.target.objectId,
+                    );
+                    const model = group.children[index];
+                    if (!model?.visible) return false;
+                    model.localToWorld(target.fromArray(box.target.point));
+                    return true;
+                  },
+                },
+                { top: 92, bottom: 96 },
+              );
+            }
+          }
+          mindar.renderer.render(mindar.scene, mindar.camera);
+        });
+      } catch (e) {
+        if (disposed) return;
+        const messages = {
+          NotAllowedError:
+            "Tap 'Start AR camera' below and allow camera permission in your browser.",
+          NotFoundError:
+            "No camera was found on this device. You can still preview all models in 3D below.",
+          NotReadableError:
+            "Your camera is currently in use by another app. Close other camera apps and try again.",
+          SecurityError:
+            "Camera access requires HTTPS in Chrome or Safari.",
+        };
+        setError(
+          messages[e?.name] ||
+            e?.message ||
+            "Tap Start AR camera below to open the camera.",
+        );
+        setMode("intro");
+        cleanup();
+      }
+    };
+
+    timeout = setTimeout(() => abort.abort(), 40000);
+    start();
+
+    const pause = () => {
+      if (document.hidden) setMode("intro");
+    };
+    const leave = () => cleanup();
+    document.addEventListener("visibilitychange", pause);
+    window.addEventListener("pagehide", leave);
+
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+      clearTimeout(timeout);
+      abort.abort();
+      document.removeEventListener("visibilitychange", pause);
+      window.removeEventListener("pagehide", leave);
+      cleanup();
+    };
+  }, [mode, collection]);
+
+  if (mode === "ar") {
+    return (
+      <main className="ar-experience">
+        <div ref={cameraHost} className="ar-camera" />
+        {active?.scene.cards?.length > 0 && (
+          <div className="ar-card-host">
+            <CardOverlay
+              key={active.id}
+              cards={active.scene.cards}
+              registry={arCards}
+              compact={compact}
+              hidden={!active}
+              onOpen={setOpenCard}
+            />
+          </div>
+        )}
+        {openCard && (
+          <LessonCardSheet card={openCard} onClose={() => setOpenCard(null)} />
+        )}
+        <div className="ar-top">
+          <IconButton
+            className="ar-control"
+            label={
+              collection.isDraft
+                ? "Back to Create workspace"
+                : "Stop camera and view models"
+            }
+            onClick={() => {
+              if (collection.isDraft) {
+                window.location.hash = "";
+              } else {
+                setMode("intro");
+              }
+            }}
+          >
+            <ArrowLeft size={21} />
+          </IconButton>
+          <div>
+            <strong>{collection.title}</strong>
+            <span>
+              <span className={active ? "green-dot" : "pulse-dot"} />
+              {!ready
+                ? "Starting camera…"
+                : active
+                  ? `Marker found · ${active.title}`
+                  : `Scan any marker (${collection.cards.length} ready)`}
+            </span>
+          </div>
+          <IconButton
+            className="ar-control"
+            label="AR viewing tips"
+            onClick={() => setTips(!tips)}
+          >
+            <HelpCircle size={21} />
+          </IconButton>
+        </div>
+        {loading && (
+          <div className="ar-loading">
+            <LoaderCircle size={34} className="spin" />
+            <strong>{loading}</strong>
+            <span>Your camera feed stays private on this device.</span>
+          </div>
+        )}
+        {ready && !active && (
+          <div className="scan-guide">
+            <div className="scan-corners">
+              <i />
+              <i />
+              <i />
+              <i />
+            </div>
+            <p>
+              Point your camera at
+              <br />
+              <strong>
+                {collection.cards.length > 1
+                  ? `any of the ${collection.cards.length} markers`
+                  : collection.cards[0].title}
+              </strong>
+            </p>
+            {collection.cards.length === 1 && (
+              <img
+                src={resolveResourceUrl(collection.cards[0].marker)}
+                alt="Look for this tracking image"
+              />
+            )}
+          </div>
+        )}
+        {tips && (
+          <div className="ar-tips">
+            <strong>AR scanning tips</strong>
+            <p>
+              Hold your phone steady over any printed marker image in good
+              lighting. Point at the marker illustration (not the QR code) to
+              see its 3D model and lesson boxes.
+            </p>
+            <button onClick={() => setTips(false)}>
+              Got it <Check size={15} />
+            </button>
+          </div>
+        )}
+        {soundError && (
+          <div className="action-sound-error" role="alert">
+            {soundError}
+          </div>
+        )}
+        {ready && active && (
+          <ActionBar
+            className="ar-action-bar"
+            objects={active.scene.objects}
+            looping={looping}
+            onPlay={playCurrent}
+          />
+        )}
+        <div className="ar-bottom">
+          <span className="ar-privacy">
+            <ShieldCheck size={14} /> Camera stays on your device
+          </span>
+          <div className="ar-scale">
+            <IconButton
+              label="Make AR objects smaller"
+              disabled={scale <= 0.5}
+              onClick={() => setScale((v) => Math.max(0.5, v - 0.1))}
+            >
+              <Minus size={17} />
+            </IconButton>
+            <span>{Math.round(scale * 100)}%</span>
+            <IconButton
+              label="Make AR objects bigger"
+              disabled={scale >= 1.8}
+              onClick={() => setScale((v) => Math.min(1.8, v + 0.1))}
+            >
+              <Plus size={17} />
+            </IconButton>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="viewer-page collection-viewer">
+      <header className="viewer-header">
+        <a href={APP_BASE} aria-label="WonderLab Studio">
+          <Logo small />
+        </a>
+        {collection.isDraft ? (
+          <button
+            className="button secondary"
+            onClick={() => {
+              window.location.hash = "";
+            }}
+          >
+            <ArrowLeft size={15} /> Back to Create
+          </button>
+        ) : (
+          <span className="viewer-top-badge">
+            <Sparkles size={13} /> One QR · {collection.cards.length} AR{" "}
+            {collection.cards.length === 1 ? "model" : "models"}
+          </span>
+        )}
+      </header>
+      <div className="viewer-main">
+        <div className="viewer-scene">
+          <StudioCanvas
+            key={selected.id}
+            project={selected.scene}
+            viewOnly
+            playing
+            showActions
+            grid={false}
+            cards={selected.scene.cards || []}
+            compactCards={compact}
+            onOpenCard={setOpenCard}
+            onSoundError={() => setSoundError("A sound could not play.")}
+          />
+          <span className="viewer-scene-badge">
+            <Box size={14} />
+            {selected.title} · 3D Preview
+          </span>
+          <span className="viewer-orbit-tip">
+            Drag to rotate · Pinch/scroll to zoom
+          </span>
+        </div>
+        <div className="viewer-copy">
+          <span className="eyebrow">
+            <Sparkles size={14} /> READY FOR AR CAMERA
+          </span>
+          <h1>{collection.title}</h1>
+          <p className="viewer-description">
+            Tap <strong>Start AR camera</strong> and point your phone at any of
+            the {collection.cards.length} markers to bring its 3D model and
+            lesson details to life.
+          </p>
+          {error && (
+            <div className="camera-error" role="alert">
+              <Camera size={20} />
+              <p>{error}</p>
+            </div>
+          )}
+          <button
+            className="button primary viewer-start"
+            onClick={() => setMode("ar")}
+          >
+            <Camera size={20} /> Start AR camera <ChevronRight size={19} />
+          </button>
+          <div className="collection-marker-list">
+            <span>MODELS IN THIS QR ({collection.cards.length})</span>
+            <div>
+              {collection.cards.map((card) => (
+                <button
+                  key={card.id}
+                  className={selected.id === card.id ? "selected" : ""}
+                  onClick={() => {
+                    setSelectedId(card.id);
+                    setOpenCard(null);
+                  }}
+                  aria-label={`Preview ${card.title}`}
+                >
+                  <img src={resolveResourceUrl(card.marker)} alt="" />
+                  <strong>{card.title}</strong>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="viewer-note">
+            <ShieldCheck size={16} />
+            <p>
+              Point your camera at the marker illustration (not the QR code).
+              <br />
+              Works directly in Chrome on Android and Safari on iPhone.
+            </p>
+          </div>
+        </div>
+      </div>
+      {openCard && (
+        <LessonCardSheet card={openCard} onClose={() => setOpenCard(null)} />
+      )}
+    </main>
+  );
+}

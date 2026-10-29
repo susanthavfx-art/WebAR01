@@ -1,0 +1,7 @@
+node_modules
+site
+dist
+.playwright-cli
+test-results
+playwright-report
+.DS_Store

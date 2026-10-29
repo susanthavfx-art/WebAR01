@@ -1,45 +1,36 @@
-# Dino Discovery — 4-marker MindAR starter
+# WonderLab Studio — Single-QR Multi-Model WebAR Creator
 
-A mobile-first image-tracking AR web app using MindAR, A-Frame/Three.js, HTML, CSS and JavaScript.
+A focused **Create** workspace for building multi-marker WebAR experiences where **all models share one single QR code**.
 
-## Marker-to-model mapping
+## Features
 
-All four marker images are in `assets/`. The order below is significant because it becomes MindAR target indexes 0–3:
+1. **Create Page Only** — Focused WonderLab Create studio without extra project/template dashboards.
+2. **Objects Tab (`.glb` Upload)** — Upload one or multiple `.glb` 3D models. Click any model to open and edit its own scene.
+3. **Lesson Tab (Per-Model Annotations)** — Add **Text**, **Audio** (record voice or upload audio), **Video**, **Image**, and **Link** boxes with dashed pointer lines to parts of each 3D model. Every model keeps its own separate Lesson boxes and scene transforms.
+4. **Markers Tab (Marker Image & `.mind` Upload)** — Upload marker images (`.jpg`, `.png`, `.webp`) and compiled MindAR `.mind` files.
+5. **Automatic Same-Name Matching** — Upload files with the same base filename in any order (for example `stegosaurus.glb`, `stegosaurus.jpg`, `stegosaurus.mind`) and they link together automatically.
+6. **Publish & Share — Single QR Code** — Combines all `.mind` targets into one shared tracker and generates **one single QR code** + printable marker/QR PDF + publish ZIP. Scanning that single QR opens the AR camera directly and shows each model (with its Lesson boxes and animations) on its matching marker.
 
-| targetIndex | Marker image | GLB model |
-|---:|---|---|
-| 0 | `assets/marker.jpg` | `assets/model.glb` |
-| 1 | `assets/marker1.jpg` | `assets/model1.glb` |
-| 2 | `assets/marker2.jpg` | `assets/model2.glb` |
-| 3 | `assets/marker3.jpg` | `assets/model3.glb` |
+## Ikman Guide (Singlish)
 
-The marker images are included. Add the matching GLB files using the names above; until then the app displays a 3D placeholder for each target.
+1. **Objects tab** ekata gihin **Upload GLB models** click karala oyage `.glb` models upload karanna (uda: `stegosaurus.glb`, `velociraptor.glb`).
+2. Model ekak click karala select karaganna. **Lesson tab** ekata gihin e model ekata adala **Text, Audio, Video, Image, Link** boxes saha pointer lines wena wenama add karanna.
+3. **Markers tab** ekata gihin model eke namama thiyena **marker images** (`stegosaurus.jpg`) saha **`.mind` files** (`stegosaurus.mind`) upload karanna. Same name thiyena files auto match wenawa.
+4. **Publish & share** click karala **Generate Single QR & Download ZIP** obanna.
+5. Download una ZIP file eka Extract (Unzip) karala, eke thiyena **`public`** folder eka GitHub repository root ekata upload karala **Commit changes** obanna.
+6. GitHub Pages deploy unata passe, eka **Single QR code** eka scan kalahama kelinma **AR camera** ekata gihin okkoma markers walata adala models saha wistara pennanawa!
 
-## Create the MindAR target file
+## Local Development & Build
 
-1. Serve the app over HTTPS or localhost. For local development, run `python3 -m http.server 8000` from this folder and open `http://localhost:8000`.
-2. Tap **Setup & model instructions → Compile all 4 markers**.
-3. The app compiles all four images in the listed order and downloads one file: `targets.mind`.
-4. Put/upload that one file as `assets/targets.mind`. If using GitHub Pages, upload it to the repository's `assets` folder and commit.
+```bash
+npm ci
+npm run dev
+```
 
-Do not compile four separate `.mind` files for this version. The four target images are bundled together into one `targets.mind`.
+Production build (for GitHub Pages subfolder `/WebAR01/`):
 
-## Add the 3D models
+```bash
+VITE_BASE_PATH=/WebAR01/ npm run build
+```
 
-Place the models here:
-
-- `assets/model.glb`
-- `assets/model1.glb`
-- `assets/model2.glb`
-- `assets/model3.glb`
-
-Each GLB is attached to its matching marker. A-Frame Extras plays embedded animation clips in a repeat loop. If a model is static, make sure animation/keyframes were exported into the GLB. Model scale is set in `index.html` in the `createAnchor` function (`scale="0.35 0.35 0.35"`).
-
-## GitHub Pages
-
-1. Upload the contents of this project folder into the root of your GitHub repository (so `index.html` is at the root and marker images are under `assets/`).
-2. Open **Settings → Pages**, choose **Deploy from a branch**, select `main` and `/(root)`, then save.
-3. Open the published HTTPS URL. Compile the markers there, then upload the downloaded `targets.mind` into `assets/` and commit it.
-4. Upload the GLB model files to `assets/` and commit them.
-
-The camera starts after the user taps **Start AR camera**, as browsers require a user gesture and camera permission. An internet connection is needed for the CDN libraries.
+Built static output is generated in `site/` and deployed automatically by `.github/workflows/static.yml`.
