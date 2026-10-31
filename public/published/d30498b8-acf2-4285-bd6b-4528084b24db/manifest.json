@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "id": "d30498b8-acf2-4285-bd6b-4528084b24db",
+  "title": "My AR Creation",
+  "mode": "shared",
+  "target": "published/d30498b8-acf2-4285-bd6b-4528084b24db/files/7d20e9de-c4e5-4f91-b4cc-e49360edfb7c.mind",
+  "cards": [
+    {
+      "id": "fc6e68b0-58dc-4b91-a0ab-cdcf44057348",
+      "title": "JungleBoy",
+      "targetIndex": 0,
+      "marker": "published/d30498b8-acf2-4285-bd6b-4528084b24db/files/6777a7e1-cd87-4d81-97c9-596b1358e415.jpg",
+      "scene": {
+        "version": 2,
+        "id": "24929545-8c75-4cfe-ba5d-ae9b00b5edca",
+        "title": "JungleBoy",
+        "objects": [
+          {
+            "id": "5073aa10-2835-4831-b8e2-1796ab32d698",
+            "assetId": "model:upload-d2e10a91-1965-43dc-a712-2eeefe674114",
+            "model": {
+              "id": "upload-d2e10a91-1965-43dc-a712-2eeefe674114",
+              "name": "JungleBoy",
+              "category": "GLB Model",
+              "file": "published/d30498b8-acf2-4285-bd6b-4528084b24db/files/d2e10a91-1965-43dc-a712-2eeefe674114.glb",
+              "height": 1.5,
+              "rotation": [
+                0,
+                0,
+                0
+              ],
+              "animate": true
+            },
+            "name": "JungleBoy",
+            "position": [
+              0,
+              0,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "scale": 1,
+            "animation": "none",
+            "visible": true,
+            "idleClip": 1,
+            "actions": [
+              {
+                "id": "4975d81f-1d98-4a34-a671-80db3b199fbe",
+                "label": "Dance",
+                "clip": 0,
+                "loop": true,
+                "sound": null
+              },
+              {
+                "id": "9e5ea665-f23b-478a-8e83-604e95b466ca",
+                "label": "Run",
+                "clip": 2,
+                "loop": true,
+                "sound": null
+              }
+            ]
+          }
+        ],
+        "cards": [
+          {
+            "id": "436f7b43-7667-414e-afd1-b66f51743dd6",
+            "type": "text",
+            "title": "ඔබේ Product Packet එකට පණ දෙන්න !",
+            "text": "Wonder Lab AR හරහා අපි Web AR, Interactive Packaging සහ 3D Character Experiences ව්‍යාපාර සඳහා නිර්මාණය කරනවා.",
+            "color": "#f0bf2e",
+            "position": [
+              4.81,
+              3.13,
+              -0.32
+            ],
+            "target": null,
+            "visible": true
+          }
+        ],
+        "updatedAt": "2026-10-31T17:26:16.578Z"
+      }
+    }
+  ]
+}
