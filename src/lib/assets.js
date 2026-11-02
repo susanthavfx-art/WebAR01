@@ -1,9 +1,15 @@
 import * as THREE from "three";
 import { createGLBModel, modelAsset } from "./model-library";
 import { disposeActions } from "./model-actions";
+import { createShape, SHAPE_ASSETS } from "./shapes";
 export { tickModel } from "./model-library";
 
 const sharedModels = new Map();
+
+// Ready-made shapes and uploaded GLBs share one registry, so every screen that
+// resolves an asset id (studio canvas, Lesson boxes, published AR viewer) can
+// show either kind without special cases.
+SHAPE_ASSETS.forEach((asset) => sharedModels.set(asset.id, asset));
 
 const FALLBACK_ASSET = {
   id: "placeholder",
@@ -52,6 +58,7 @@ export const getAsset = (id, definition) => {
 export function createAsset(id, tint, definition) {
   const asset = getAsset(id, definition);
   if (asset.kind === "glb") return createGLBModel(asset, tint);
+  if (asset.kind === "shape") return createShape(asset.shape, tint);
   const group = new THREE.Group();
   const box = new THREE.Mesh(
     new THREE.BoxGeometry(0.9, 0.9, 0.9),
@@ -180,9 +187,9 @@ function renderThumbnail(key, model) {
 }
 
 function thumbnailKey(asset) {
-  return asset.kind === "glb"
-    ? `${asset.id}:${JSON.stringify(asset.model)}`
-    : asset.id;
+  if (asset.kind === "glb") return `${asset.id}:${JSON.stringify(asset.model)}`;
+  if (asset.kind === "shape") return `shape:${asset.shape}`;
+  return asset.id;
 }
 
 export function assetThumbnail(id, definition) {
@@ -196,7 +203,11 @@ export function assetThumbnail(id, definition) {
 export function assetThumbnailAsync(id, definition) {
   const asset = getAsset(id, definition);
   const key = thumbnailKey(asset);
-  if (asset.kind !== "glb" || asset.thumbnailUrl || thumbnailCache.has(key)) {
+  if (
+    !(asset.kind === "glb" || asset.kind === "shape") ||
+    asset.thumbnailUrl ||
+    thumbnailCache.has(key)
+  ) {
     return Promise.resolve(assetThumbnail(id, definition));
   }
   if (!thumbnailJobs.has(key)) {

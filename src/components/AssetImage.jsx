@@ -39,11 +39,7 @@ export default function AssetImage({ assetId, model, alt = "", ...props }) {
             });
         });
     const asset = getAsset(assetId, model);
-    if (
-      asset.kind === "glb" &&
-      !asset.thumbnailUrl &&
-      "IntersectionObserver" in window
-    ) {
+    if (!asset.thumbnailUrl && "IntersectionObserver" in window) {
       observer = new IntersectionObserver(
         (entries) => {
           if (entries.some((entry) => entry.isIntersecting)) {

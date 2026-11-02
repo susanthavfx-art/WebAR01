@@ -10318,3 +10318,86 @@ textarea.text-input {
   margin: 0;
 }
 
+
+/* Ready-made shape library (Assemblr-style objects) */
+.library-tabs.four-tabs > button {
+  font-size: 9px;
+  gap: 3px;
+  padding: 0 1px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.library-tabs.four-tabs > button > svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+/* Four tabs need the space for labels, so the count chips move to the lists. */
+.library-tabs.four-tabs > button > span {
+  display: none;
+}
+.shapes-library {
+  display: flex;
+  flex-direction: column;
+}
+.shapes-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px 11px;
+  margin-bottom: 11px;
+  border-radius: 10px;
+  background: #f6f2fd;
+  border: 1px solid #e7def9;
+  color: #55436f;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+.shapes-intro > svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #8b6ee8;
+}
+.library-scroll .shapes-search {
+  margin: 0 0 10px;
+  padding: 0 9px;
+  flex-shrink: 0;
+}
+.shapes-categories {
+  padding: 0 0 11px;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.shapes-categories > button {
+  border: 1px solid #ece7f4;
+  background: #fff;
+  font-size: 9.5px;
+  padding: 4px 9px;
+}
+.shapes-categories > button.active {
+  border-color: #d9cdf3;
+  background: #eee8f8;
+}
+.shape-card .asset-art {
+  height: 86px;
+}
+.shape-card .asset-add {
+  opacity: 1;
+  background: #ffffffee;
+}
+.shape-card:disabled {
+  opacity: 0.55;
+}
+.blank-scene-button {
+  margin-top: 8px;
+}
+.match-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.35;
+  color: #8d7ea2;
+  word-break: break-word;
+}
