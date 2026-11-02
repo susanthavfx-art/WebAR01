@@ -29,6 +29,7 @@ import {
   ScanLine,
   Search,
   Share2,
+  Shapes,
   ShieldCheck,
   SlidersHorizontal,
   Smile,
@@ -40,6 +41,7 @@ import {
   X,
 } from "lucide-react";
 import { currentPage } from "./lib/deployment";
+import ShapesLibrary from "./components/ShapesLibrary";
 import StudioCanvas from "./components/StudioCanvas";
 import CollectionViewer from "./components/CollectionViewer";
 import PublishModal from "./components/PublishModal";
@@ -55,6 +57,7 @@ import {
   sceneObject,
 } from "./lib/assets";
 import { MAX_CARDS, newCard, validateCard } from "./lib/lesson-cards";
+import { findShape } from "./lib/shapes";
 import { resolveResourceUrl, saveLocalFile } from "./lib/local-files";
 import { clone, MAX_OBJECTS, newScene, validateScene } from "./lib/projects";
 import {
@@ -313,14 +316,112 @@ function CreateStudio() {
     });
   }
 
+  function startBlankEntry(reason = "ar-card") {
+    const current = stateRef.current;
+    if (current.workspace.entries.length >= MAX_FLASHCARDS) {
+      notify(
+        `This workspace supports up to ${MAX_FLASHCARDS} AR cards.`,
+        "error",
+      );
+      return null;
+    }
+    // Numbers stay unique even after cards were deleted, so filename matching
+    // (ar-card-1.jpg, ar-card-2.mind …) never collides.
+    const used = new Set(
+      current.workspace.entries.map((item) => entryFileKey(item)),
+    );
+    let number = current.workspace.entries.length + 1;
+    while (used.has(`${reason}-${number}`)) number += 1;
+    const title = `AR Card ${number}`;
+    const scene = newScene(title);
+    const entry = newEntry(
+      scene.id,
+      title,
+      `${reason}-${number}`,
+      current.workspace.entries.length,
+    );
+    const next = {
+      ...current,
+      scenes: [...current.scenes, scene],
+      workspace: {
+        ...current.workspace,
+        entries: [...current.workspace.entries, entry],
+        selectedEntryId: entry.id,
+        sharedTarget: null,
+        trackerSignature: "",
+        updatedAt: new Date().toISOString(),
+      },
+    };
+    replaceState(next);
+    setSelectedId(null);
+    setPickCardId(null);
+    return { entry, scene, state: next };
+  }
+
+  function addShape(shapeId) {
+    const shape = findShape(shapeId);
+    if (!shape) return;
+    const current = stateRef.current;
+    let entry = getActiveEntry(current);
+    let scenes = current.scenes;
+    let base = current;
+
+    if (!entry) {
+      const started = startBlankEntry("ar-card");
+      if (!started) return;
+      base = started.state;
+      entry = started.entry;
+      scenes = base.scenes;
+    }
+
+    const scene = sceneForEntry(entry, scenes);
+    if (!scene) {
+      notify("This AR card has no scene yet. Try again.", "error");
+      return;
+    }
+    if (scene.objects.length >= MAX_OBJECTS) {
+      notify(`Keep each scene to ${MAX_OBJECTS} objects.`, "error");
+      return;
+    }
+
+    // Spread new objects around the marker instead of stacking them.
+    const index = scene.objects.length;
+    const ring = index === 0 ? 0 : 0.55 + (index % 3) * 0.12;
+    const angle = index * 2.399;
+    const object = sceneObject(
+      shape.id,
+      [Math.cos(angle) * ring, 0, Math.sin(angle) * ring],
+      1,
+    );
+
+    const history = getHistory(entry.sceneId);
+    history.past.push(clone(scene));
+    if (history.past.length > 50) history.past.shift();
+    history.future = [];
+
+    const nextScene = {
+      ...scene,
+      objects: [...scene.objects, object],
+      updatedAt: new Date().toISOString(),
+    };
+    replaceState({
+      ...base,
+      scenes: scenes.map((item) => (item.id === nextScene.id ? nextScene : item)),
+    });
+    setSelectedId(object.id);
+    setPickCardId(null);
+    setInspectorTab("object");
+    notify(`${shape.name} added. Drag, resize or recolour it.`);
+  }
+
   function addCard(type) {
     const current = stateRef.current;
     const entry = getActiveEntry(current);
     const p = getActiveScene(current);
     if (!entry || !p.objects.length) {
-      setLibraryTab("objects");
+      setLibraryTab("shapes");
       notify(
-        "Upload a GLB model in the Objects tab first, then add Lesson boxes for it.",
+        "Add a shape from the Shapes tab (or upload a GLB) first, then add Lesson boxes for it.",
         "error",
       );
       return;
@@ -540,9 +641,28 @@ function CreateStudio() {
       let focusEntryId = null;
       let focusObjectId = null;
 
+      let attachedTitle = "";
+      let attachedOnce = false;
       for (const { file, record, key } of saved) {
         let item = entries.find((candidate) => entryFileKey(candidate) === key);
         let scene = item && sceneForEntry(item, scenes);
+
+        // Marker images and .mind files can be given any filename when the
+        // active AR card is still waiting for that piece — that is what makes
+        // ready-made shape scenes work without renaming files to match a GLB.
+        if (!item && !attachedOnce && (kind === "marker" || kind === "target")) {
+          const active = entries.find(
+            (candidate) => candidate.id === current.workspace.selectedEntryId,
+          );
+          const waiting =
+            active && (kind === "marker" ? !active.marker : !active.sourceMind);
+          if (waiting) {
+            item = active;
+            scene = sceneForEntry(item, scenes);
+            attachedTitle = item.title;
+            attachedOnce = true;
+          }
+        }
 
         if (!item) {
           if (entries.length >= MAX_FLASHCARDS) {
@@ -643,7 +763,9 @@ function CreateStudio() {
         notify(errors.join(" "), "error");
       } else {
         notify(
-          `${saved.length} ${saved.length === 1 ? "file" : "files"} uploaded and matched by name.`,
+          attachedTitle
+            ? `${saved.length} ${saved.length === 1 ? "file" : "files"} attached to ${attachedTitle}.`
+            : `${saved.length} ${saved.length === 1 ? "file" : "files"} uploaded and matched by name.`,
         );
       }
     } catch (err) {
@@ -897,7 +1019,15 @@ function CreateStudio() {
             </IconButton>
           </div>
 
-          <div className="library-tabs">
+          <div className="library-tabs four-tabs">
+            <button
+              type="button"
+              className={libraryTab === "shapes" ? "active" : ""}
+              onClick={() => setLibraryTab("shapes")}
+            >
+              <Shapes size={16} />
+              Shapes
+            </button>
             <button
               type="button"
               className={libraryTab === "objects" ? "active" : ""}
@@ -968,6 +1098,21 @@ function CreateStudio() {
                     onChange={(e) => handleUploadFiles("model", e)}
                   />
                 </label>
+                <button
+                  type="button"
+                  className="button secondary full blank-scene-button"
+                  onClick={() => {
+                    const started = startBlankEntry("ar-card");
+                    if (started) {
+                      notify(
+                        "Empty AR card ready — add shapes in the Shapes tab.",
+                      );
+                    }
+                  }}
+                >
+                  <Plus size={15} />
+                  <span>Start an empty AR card</span>
+                </button>
               </div>
 
               <label className="search-field">
@@ -991,10 +1136,14 @@ function CreateStudio() {
 
               {pendingModelEntries.length > 0 && (
                 <div className="pending-match-banner">
-                  <strong>Waiting for matching GLB:</strong>
+                  <strong>Waiting for matching files:</strong>
                   <span>
                     {pendingModelEntries
-                      .map((e) => `${e.matchKey}.glb`)
+                      .map((e) =>
+                        e.model
+                          ? `${e.matchKey}.glb`
+                          : `${e.matchKey}.jpg + ${e.matchKey}.mind`,
+                      )
                       .join(", ")}
                   </span>
                 </div>
@@ -1051,7 +1200,11 @@ function CreateStudio() {
                                   draggable={false}
                                 />
                               )}
-                              <span className="asset-filetype">GLB</span>
+                              <span className="asset-filetype">
+                                {primaryObj?.assetId?.startsWith("prim:")
+                                  ? "3D"
+                                  : "GLB"}
+                              </span>
                               <span
                                 className={`asset-match-dot ${status.ready ? "ready" : "pending"}`}
                                 title={
@@ -1095,7 +1248,7 @@ function CreateStudio() {
                   >
                     {search
                       ? "Try a different model name."
-                      : "Upload one or more .glb files above. Each model gets its own scene and lesson boxes."}
+                      : "Upload one or more .glb files above — or open the Shapes tab to build a scene from ready-made 3D objects, no upload needed."}
                   </EmptyState>
                 )}
 
@@ -1109,6 +1262,11 @@ function CreateStudio() {
                 </div>
               </div>
             </>
+          ) : libraryTab === "shapes" ? (
+            <ShapesLibrary
+              onAdd={addShape}
+              count={project.objects.length}
+            />
           ) : (
             <div className="library-scroll marker-library">
               <p className="panel-description">
@@ -1213,6 +1371,14 @@ function CreateStudio() {
                                 .mind {status.mindReady ? "✓" : "○"}
                               </i>
                             </span>
+                            {(!status.markerReady || !status.mindReady) && (
+                              <small className="match-hint">
+                                Select this card, then upload any marker image
+                                and .mind file — or use{" "}
+                                {entryFileKey(item)}.jpg + {entryFileKey(item)}
+                                .mind
+                              </small>
+                            )}
                           </span>
                           <span className="marker-selected">
                             {status.ready ? (
@@ -1801,25 +1967,32 @@ function CreateStudio() {
           </div>
           <ol className="help-steps-list">
             <li>
-              <strong>1. Objects tab — Upload GLB models:</strong> Upload your{" "}
-              <code>.glb</code> models (for example{" "}
-              <code>stegosaurus.glb</code>, <code>velociraptor.glb</code>).
-              Click any model to open its own scene.
+              <strong>1. Shapes tab — Drop ready-made 3D objects:</strong> Tap a
+              cube, tree, rocket or robot to place it on the marker. No GLB
+              upload needed — or open the <strong>Objects</strong> tab to upload
+              your own <code>.glb</code> models.
             </li>
             <li>
-              <strong>2. Lesson tab — Add details per model:</strong> Add Text,
+              <strong>2. Objects tab — Your own GLB models:</strong> Upload{" "}
+              <code>.glb</code> files (for example{" "}
+              <code>stegosaurus.glb</code>). Click any card to open its own
+              scene.
+            </li>
+            <li>
+              <strong>3. Lesson tab — Add details per scene:</strong> Add Text,
               Audio (record or upload), Video, Image, or Link boxes and point
-              them to parts of that model. Every model keeps its own separate
+              them to parts of that scene. Every card keeps its own separate
               boxes!
             </li>
             <li>
-              <strong>3. Markers tab — Upload markers &amp; .mind files:</strong>{" "}
-              Upload marker images (<code>stegosaurus.jpg</code>) and compiled{" "}
-              <code>.mind</code> files (<code>stegosaurus.mind</code>) with the
-              exact same base name. They pair automatically!
+              <strong>4. Markers tab — Upload markers &amp; .mind files:</strong>{" "}
+              Select a card and upload any marker image plus a compiled{" "}
+              <code>.mind</code> file, or use matching names like{" "}
+              <code>stegosaurus.jpg</code> + <code>stegosaurus.mind</code>. They
+              pair automatically!
             </li>
             <li>
-              <strong>4. Publish &amp; share — Single QR Code:</strong> Click{" "}
+              <strong>5. Publish &amp; share — Single QR Code:</strong> Click{" "}
               <strong>Publish &amp; share</strong> to generate one QR code and
               download the publish ZIP. Extract and drag the{" "}
               <code>public</code> folder into your GitHub repository — scanning

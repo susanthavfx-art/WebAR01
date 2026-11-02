@@ -234,7 +234,9 @@ export function workspaceProblems(workspace, scenes) {
     const status = entryStatus(entry, scenes);
     if (!status.modelReady) {
       issues.push(
-        `${entry.title}: upload "${stem}.glb" in the Objects tab.`,
+        scene.objects.length
+          ? `${entry.title}: upload "${stem}.glb" in the Objects tab.`
+          : `${entry.title}: add a shape in the Shapes tab, or upload "${stem}.glb" in the Objects tab.`,
       );
     }
     if (!status.markerReady) {
