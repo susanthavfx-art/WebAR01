@@ -6,6 +6,7 @@ import {
   Box,
   Camera,
   Check,
+  DoorOpen,
   ChevronRight,
   HelpCircle,
   LoaderCircle,
@@ -714,6 +715,18 @@ function CollectionExperience({ collection }) {
           >
             <Camera size={20} /> Start AR camera <ChevronRight size={19} />
           </button>
+          <a
+            className="button secondary viewer-portal"
+            href={`#${new URLSearchParams({
+              page: "portal",
+              m: selected.marker,
+              tg: collection.target,
+              ti: String(selected.targetIndex ?? 0),
+              n: `${selected.title} portal`,
+            }).toString()}`}
+          >
+            <DoorOpen size={18} /> Make a portal on this marker
+          </a>
           <div className="collection-marker-list">
             <span>MODELS IN THIS QR ({collection.cards.length})</span>
             <div>

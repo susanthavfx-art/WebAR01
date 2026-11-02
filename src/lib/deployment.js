@@ -12,5 +12,6 @@ export function fragmentParams() {
 export function currentPage() {
   const params = fragmentParams();
   if (params.get("page") === "collection") return "collection";
+  if (params.get("page") === "portal") return "portal";
   return "studio";
 }
