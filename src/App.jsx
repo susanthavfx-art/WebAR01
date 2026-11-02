@@ -10,6 +10,7 @@ import {
   ChevronRight,
   CircleHelp,
   CloudOff,
+  DoorOpen,
   FileImage,
   FileScan,
   Grid2X2,
@@ -44,6 +45,7 @@ import { currentPage } from "./lib/deployment";
 import ShapesLibrary from "./components/ShapesLibrary";
 import StudioCanvas from "./components/StudioCanvas";
 import CollectionViewer from "./components/CollectionViewer";
+import PortalWorkshop from "./components/PortalWorkshop";
 import PublishModal from "./components/PublishModal";
 import AssetImage from "./components/AssetImage";
 import { ObjectProperties, SceneObjects } from "./components/SceneProperties";
@@ -92,6 +94,15 @@ export default function App() {
 
   if (currentPage() === "collection") {
     return <CollectionViewer key={location} />;
+  }
+  if (currentPage() === "portal") {
+    return (
+      <PortalWorkshop
+        onExit={() => {
+          window.location.hash = "";
+        }}
+      />
+    );
   }
   return <CreateStudio />;
 }
@@ -853,6 +864,14 @@ function CreateStudio() {
             <WandSparkles size={17} />
             <span>Create</span>
           </button>
+          <a
+            className="main-nav-link"
+            href="#page=portal"
+            title="Build an AR doorway on one of your markers"
+          >
+            <DoorOpen size={17} />
+            <span>Portal</span>
+          </a>
         </nav>
         <div className="header-right">
           <IconButton
