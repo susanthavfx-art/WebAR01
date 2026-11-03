@@ -601,6 +601,8 @@ const StudioCanvas = forwardRef(function StudioCanvas(
             return true;
           },
         },
+        // Keep lesson content clear of viewer labels and animation controls.
+        { top: p.viewOnly ? 44 : 0, bottom: p.showActions ? 80 : 0 },
       );
       needsRender = false;
     };

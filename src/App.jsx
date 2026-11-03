@@ -1884,8 +1884,8 @@ function CreateStudio() {
             </span>
             <h2>{activeEntry.title}</h2>
             <p>
-              Drag to orbit and tap any Lesson box to test text, audio, video,
-              images or links.
+              Drag to orbit and tap any coloured lesson icon to open its full
+              text or media.
             </p>
           </div>
           <div className="preview-canvas">
@@ -1897,6 +1897,7 @@ function CreateStudio() {
               showActions
               grid={false}
               cards={cards}
+              compactCards
               onOpenCard={setPreviewCard}
             />
             {previewCard && (

@@ -4389,16 +4389,18 @@ input::-webkit-inner-spin-button {
     height: 350px;
   }
   .viewer-main {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     max-width: 580px;
     padding: 25px 25px 35px;
     gap: 27px;
   }
   .viewer-scene {
     height: 340px;
+    min-width: 0;
     border-radius: 17px;
   }
   .viewer-copy {
+    min-width: 0;
     padding: 0 4px;
   }
   .viewer-copy h1 {
@@ -6566,21 +6568,38 @@ input::-webkit-inner-spin-button {
   border: 1px dashed #cfc6dc;
   font-weight: 600;
 }
-.lesson-layer.compact .lesson-card {
-  width: auto;
-  max-width: 168px;
-  padding: 6px 10px 6px 6px;
-  border-width: 2px;
-  border-radius: 999px;
+/* Icon-only lesson markers leave the model unobstructed in previews and
+   published views. The full lesson opens when an icon is clicked or tapped. */
+.lesson-layer.compact .lesson-lines {
+  display: none;
 }
-.lesson-layer.compact .lesson-card-title strong {
-  font-size: 11.5px;
-  -webkit-line-clamp: 1;
+.lesson-layer.compact .lesson-card {
+  width: 48px;
+  height: 48px;
+  max-width: none;
+  padding: 3px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  border-radius: 14px;
+  background: #fffffff5;
+  box-shadow:
+    0 5px 16px #24153238,
+    0 0 0 1px color-mix(in srgb, var(--card-color) 38%, transparent);
+  touch-action: manipulation;
 }
 .lesson-layer.compact .lesson-card-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  transition: transform 0.15s ease;
+}
+.lesson-layer.compact .lesson-card:active .lesson-card-icon {
+  transform: scale(0.9);
+}
+.lesson-layer.compact .lesson-card:focus-visible {
+  outline-color: var(--card-color);
+  outline-offset: 3px;
 }
 .studio-canvas.picking-point canvas {
   cursor: crosshair;
@@ -7068,12 +7087,19 @@ textarea.text-input {
 }
 .lesson-sheet h2 {
   flex: 1;
+  min-width: 0;
   margin: 0;
   font-family: var(--heading);
   font-size: 18px;
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 .lesson-sheet header .icon-button {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
   color: #5b536a;
 }
 .lesson-sheet-text {
