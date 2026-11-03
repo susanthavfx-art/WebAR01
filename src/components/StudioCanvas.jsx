@@ -21,10 +21,12 @@ import {
   playAction,
   setIdleClip,
   stopActions,
+  updateJoystickMovement,
   validIdleClip,
 } from "../lib/model-actions";
 import { CardOverlay, positionCards } from "./LessonCards";
 import { ActionBar } from "./ModelActions";
+import JoystickDock from "./MovementJoystick";
 
 const StudioCanvas = forwardRef(function StudioCanvas(
   {
@@ -286,6 +288,13 @@ const StudioCanvas = forwardRef(function StudioCanvas(
       },
     };
     engine.current = e;
+    e.joystickObjectId = null;
+    e.joystickInput = { x: 0, y: 0 };
+    e.setJoystickInput = (objectId, input) => {
+      e.joystickObjectId = objectId;
+      e.joystickInput = input || { x: 0, y: 0 };
+      needsRender = true;
+    };
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -551,8 +560,17 @@ const StudioCanvas = forwardRef(function StudioCanvas(
         p.project.objects.forEach((o, i) => {
           const m = models.get(o.id)?.group;
           if (!m || !(p.playing || isActing(m))) return;
+          const motion = updateJoystickMovement(
+            m,
+            o,
+            e.joystickObjectId === o.id ? e.joystickInput : null,
+            camera,
+            delta,
+          );
           if (m.visible) tickModel(m, delta);
           const fx = actionOffsets(m, now / 1000);
+          m.position.x = motion ? motion.x : o.position[0];
+          m.position.z = motion ? motion.z : o.position[2];
           m.position.y =
             o.position[1] +
             (p.playing && o.animation === "float"
@@ -561,6 +579,7 @@ const StudioCanvas = forwardRef(function StudioCanvas(
             fx.y * o.scale;
           m.rotation.y =
             (o.rotation[1] * Math.PI) / 180 +
+            (motion?.heading || 0) +
             (p.playing && o.animation === "spin" ? t * 0.28 : 0) +
             fx.rot;
           m.rotation.z = (o.rotation[2] * Math.PI) / 180 + fx.tilt;
@@ -768,6 +787,14 @@ const StudioCanvas = forwardRef(function StudioCanvas(
           objects={project.objects}
           looping={looping}
           onPlay={(object, action) => runAction(object.id, action)}
+        />
+      )}
+      {showActions && (playing || viewOnly) && (
+        <JoystickDock
+          objects={project.objects}
+          onChange={(objectId, input) =>
+            engine.current?.setJoystickInput(objectId, input)
+          }
         />
       )}
       {(modelSummary.loading > 0 || modelSummary.errors.length > 0) &&

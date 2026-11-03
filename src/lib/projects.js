@@ -1,6 +1,10 @@
 import { getAsset, hasAsset, registerSharedModel } from "./assets";
 import { validateCards } from "./lesson-cards";
-import { validIdleClip, validateActions } from "./model-actions";
+import {
+  validIdleClip,
+  validateActions,
+  validateJoystick,
+} from "./model-actions";
 
 export const MAX_OBJECTS = 20;
 
@@ -74,6 +78,7 @@ export function validateScene(input) {
       if (ids.has(id)) id = crypto.randomUUID();
       ids.add(id);
       const asset = getAsset(o.assetId, o.model);
+      const joystick = validateJoystick(o.joystick);
       return {
         id,
         assetId: o.assetId,
@@ -100,6 +105,7 @@ export function validateScene(input) {
         ...(Array.isArray(o.actions) && o.actions.length
           ? { actions: validateActions(o.actions) }
           : {}),
+        ...(joystick ? { joystick } : {}),
       };
     });
 

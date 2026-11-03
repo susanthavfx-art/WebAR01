@@ -7,6 +7,11 @@ import { resolveResourceUrl } from "./local-files";
 export const MAX_ACTIONS = 6;
 export const ACTION_LABEL_LIMIT = 24;
 export const MAX_CLIP_INDEX = 99;
+export const JOYSTICK_MIN_SPEED = 0.3;
+export const JOYSTICK_MAX_SPEED = 2.5;
+export const JOYSTICK_DEFAULT_SPEED = 1.2;
+const JOYSTICK_ACTION_ID = "@wonderlab-joystick";
+const JOYSTICK_MAX_RADIUS = 2.35;
 export const EFFECTS = [
   { id: "@jump", name: "Jump", duration: 0.9 },
   { id: "@spin", name: "Spin around", duration: 1.2 },
@@ -31,6 +36,36 @@ function newId() {
 
 export function validIdleClip(value) {
   return value === -1 || isClipIndex(value) ? value : undefined;
+}
+
+export function validateJoystick(input) {
+  if (!input || typeof input !== "object" || !isClipIndex(input.clip)) {
+    return null;
+  }
+  return {
+    clip: input.clip,
+    speed:
+      typeof input.speed === "number" && Number.isFinite(input.speed)
+        ? Math.round(
+            Math.max(
+              JOYSTICK_MIN_SPEED,
+              Math.min(JOYSTICK_MAX_SPEED, input.speed),
+            ) * 10,
+          ) / 10
+        : JOYSTICK_DEFAULT_SPEED,
+  };
+}
+
+// Prefer a locomotion clip when one is available, while still allowing the
+// teacher to choose any animation in the uploaded GLB.
+export function blankJoystick(clipNames = []) {
+  const movement = clipNames.findIndex((name) =>
+    /walk|run|locomotion|move/i.test(String(name)),
+  );
+  return {
+    clip: movement >= 0 ? movement : 0,
+    speed: JOYSTICK_DEFAULT_SPEED,
+  };
 }
 
 export function validateAction(input) {
@@ -92,7 +127,8 @@ export function encodeObjectActions(objects) {
   objects.forEach((o, i) => {
     const idle = validIdleClip(o.idleClip);
     const actions = validateActions(o.actions);
-    if (idle === undefined && !actions.length) return;
+    const joystick = validateJoystick(o.joystick);
+    if (idle === undefined && !actions.length && !joystick) return;
     rows.push([
       i,
       idle === undefined ? null : idle,
@@ -108,6 +144,7 @@ export function encodeObjectActions(objects) {
           );
         return row;
       }),
+      ...(joystick ? [[joystick.clip, joystick.speed]] : []),
     ]);
   });
   return rows;
@@ -122,28 +159,32 @@ export function decodeObjectActions(rows, objects) {
     const target = copy[row[0]];
     const idle = validIdleClip(row[1]);
     if (idle !== undefined) target.idleClip = idle;
-    if (!Array.isArray(row[2])) continue;
-    target.actions = validateActions(
-      row[2].slice(0, MAX_ACTIONS).map((a) =>
-        Array.isArray(a)
-          ? {
-              label: a[0],
-              clip: a[1],
-              loop: a[2] === 1,
-              sound:
-                typeof a[3] === "string"
-                  ? {
-                      url: a[3],
-                      name: a[4],
-                      mime: a[5] || undefined,
-                      duration: typeof a[6] === "number" ? a[6] : undefined,
-                      recorded: a[7] === 1,
-                    }
-                  : null,
-            }
-          : null,
-      ),
-    );
+    if (Array.isArray(row[2])) {
+      target.actions = validateActions(
+        row[2].slice(0, MAX_ACTIONS).map((a) =>
+          Array.isArray(a)
+            ? {
+                label: a[0],
+                clip: a[1],
+                loop: a[2] === 1,
+                sound:
+                  typeof a[3] === "string"
+                    ? {
+                        url: a[3],
+                        name: a[4],
+                        mime: a[5] || undefined,
+                        duration: typeof a[6] === "number" ? a[6] : undefined,
+                        recorded: a[7] === 1,
+                      }
+                    : null,
+              }
+            : null,
+        ),
+      );
+    }
+    if (Array.isArray(row[3])) {
+      target.joystick = validateJoystick({ clip: row[3][0], speed: row[3][1] });
+    }
   }
   return copy;
 }
@@ -309,6 +350,32 @@ export function playAction(group, action, onSoundError) {
   return loop ? "loop" : "once";
 }
 
+// Joystick locomotion has its own action id so ordinary play buttons keep
+// working. A manually started clip takes priority until it finishes or stops.
+function setJoystickPlaying(group, clipIndex, moving) {
+  const s = stateOf(group);
+  if (!moving) {
+    if (s.current?.id === JOYSTICK_ACTION_ID) returnToIdle(group);
+    return;
+  }
+  if (s.current && s.current.id !== JOYSTICK_ACTION_ID) return;
+  const { mixer, clips } = group.userData;
+  const clip = clips?.[clipIndex];
+  if (!mixer || !clip) return;
+  const next = mixer.clipAction(clip);
+  if (s.current?.id === JOYSTICK_ACTION_ID && s.clipAction === next) return;
+
+  stopActions(group);
+  const idle = group.userData.idleAction;
+  if (idle && idle !== next) idle.fadeOut(0.16);
+  next.reset().setLoop(THREE.LoopRepeat, Infinity);
+  next.clampWhenFinished = false;
+  next.fadeIn(0.16).play();
+  s.clipAction = next;
+  s.current = { id: JOYSTICK_ACTION_ID, loop: true };
+  refreshActing(group);
+}
+
 export function stopActions(group) {
   if (!group?.userData.actionState) return;
   const s = stateOf(group);
@@ -372,4 +439,122 @@ export function actionOffsets(group, now = performance.now() / 1000) {
     default:
       return ZERO;
   }
+}
+
+/* ---------------- touch joystick locomotion ---------------- */
+
+const joystickForward = new THREE.Vector3();
+const joystickRight = new THREE.Vector3();
+const joystickDirection = new THREE.Vector3();
+const joystickCameraRotation = new THREE.Quaternion();
+const joystickParentRotation = new THREE.Quaternion();
+
+export function resetJoystickMovement(group) {
+  if (!group) return;
+  const s = group.userData.actionState;
+  if (s?.current?.id === JOYSTICK_ACTION_ID) returnToIdle(group);
+  delete group.userData.joystickMotion;
+}
+
+// Move in the model parent's X/Z plane, using the current camera's left/right
+// and forward directions. This works both for an orbit preview and a rotated
+// MindAR marker group. The returned heading is relative to the teacher's
+// original Y rotation, so models with a different forward axis keep their
+// corrective initial rotation.
+export function updateJoystickMovement(
+  group,
+  object,
+  input,
+  camera,
+  delta = 1 / 30,
+) {
+  const config = validateJoystick(object?.joystick);
+  if (!group || !config) {
+    resetJoystickMovement(group);
+    return null;
+  }
+  const motion = (group.userData.joystickMotion ||= {
+    offsetX: 0,
+    offsetZ: 0,
+    heading: 0,
+  });
+  const rawX = Number.isFinite(input?.x) ? input.x : 0;
+  const rawY = Number.isFinite(input?.y) ? input.y : 0;
+  const rawStrength = Math.min(1, Math.hypot(rawX, rawY));
+  const hasClip = !!group.userData.clips?.[config.clip];
+  const moving =
+    hasClip && group.visible && object.visible !== false && rawStrength > 0.06;
+  setJoystickPlaying(group, config.clip, moving);
+
+  if (moving) {
+    if (group.parent) {
+      group.parent.getWorldQuaternion(joystickParentRotation).invert();
+    } else {
+      joystickParentRotation.identity();
+    }
+    camera?.getWorldDirection(joystickForward);
+    if (!camera) joystickForward.set(0, 0, -1);
+    joystickForward.applyQuaternion(joystickParentRotation);
+    joystickForward.y = 0;
+    if (joystickForward.lengthSq() < 0.00001) {
+      joystickForward.set(0, 0, -1);
+    } else {
+      joystickForward.normalize();
+    }
+
+    if (camera) {
+      camera.getWorldQuaternion(joystickCameraRotation);
+      joystickRight
+        .set(1, 0, 0)
+        .applyQuaternion(joystickCameraRotation)
+        .applyQuaternion(joystickParentRotation);
+    } else {
+      joystickRight.set(1, 0, 0);
+    }
+    joystickRight.y = 0;
+    if (joystickRight.lengthSq() < 0.00001) {
+      joystickRight.set(1, 0, 0);
+    } else {
+      joystickRight.normalize();
+    }
+
+    joystickDirection
+      .set(0, 0, 0)
+      .addScaledVector(joystickRight, rawX)
+      .addScaledVector(joystickForward, rawY);
+    if (joystickDirection.lengthSq() > 1) joystickDirection.normalize();
+
+    const step = Math.min(Math.max(delta, 0), 0.1);
+    const speed = config.speed * Math.max(0.15, rawStrength) * step;
+    const baseX = object.position[0];
+    const baseZ = object.position[2];
+    let x = baseX + motion.offsetX + joystickDirection.x * speed;
+    let z = baseZ + motion.offsetZ + joystickDirection.z * speed;
+
+    // Keep the model near the marker. An initially distant object is not
+    // snapped back; its existing radius becomes its own safe boundary.
+    const limit = Math.max(JOYSTICK_MAX_RADIUS, Math.hypot(baseX, baseZ));
+    const radius = Math.hypot(x, z);
+    if (radius > limit) {
+      x = (x / radius) * limit;
+      z = (z / radius) * limit;
+    }
+    motion.offsetX = x - baseX;
+    motion.offsetZ = z - baseZ;
+
+    if (joystickDirection.lengthSq() > 0.00001) {
+      const target = Math.atan2(joystickDirection.x, joystickDirection.z);
+      const difference = Math.atan2(
+        Math.sin(target - motion.heading),
+        Math.cos(target - motion.heading),
+      );
+      motion.heading += difference * Math.min(1, step * 11);
+    }
+  }
+
+  return {
+    x: object.position[0] + motion.offsetX,
+    z: object.position[2] + motion.offsetZ,
+    heading: motion.heading,
+  };
 }
