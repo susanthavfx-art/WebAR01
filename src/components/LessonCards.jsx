@@ -66,11 +66,24 @@ function MediaChip({ card }) {
 
 export function LessonCardFace({ card, compact }) {
   const Icon = CARD_ICONS[card.type];
+
+  // In preview and published views the 3D model gets the screen, not the
+  // lesson content. Keep only the familiar toolbox icon visible;
+  // LessonCardSheet opens the full content after a click or tap. The parent
+  // button retains the accessible lesson title.
+  if (compact) {
+    return (
+      <span className="lesson-card-icon" aria-hidden="true">
+        <Icon size={23} strokeWidth={2.15} />
+      </span>
+    );
+  }
+
   return (
     <>
       <span className="lesson-card-title">
-        <span className="lesson-card-icon">
-          <Icon size={compact ? 13 : 14} />
+        <span className="lesson-card-icon" aria-hidden="true">
+          <Icon size={14} />
         </span>
         <strong>{card.title || "Untitled box"}</strong>
       </span>
@@ -157,11 +170,13 @@ export function CardOverlay({
           role="button"
           tabIndex={hidden ? -1 : 0}
           data-card-id={card.id}
+          aria-haspopup={mode === "edit" ? undefined : "dialog"}
           aria-label={
             mode === "edit"
               ? `Edit lesson box ${card.title || "Untitled"}`
               : `Open lesson box ${card.title || "Untitled"}`
           }
+          title={compact ? card.title || "Open lesson box" : undefined}
           className={`lesson-card type-${card.type} ${card.id === selectedId ? "selected" : ""} ${card.visible ? "" : "is-hidden"}`}
           style={{ "--card-color": card.color, visibility: "hidden" }}
           onPointerDown={(event) => {

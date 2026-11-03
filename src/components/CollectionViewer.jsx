@@ -115,9 +115,6 @@ function CollectionExperience({ collection }) {
   const selected =
     collection.cards.find((card) => card.id === selectedId) ||
     collection.cards[0];
-  const compact =
-    typeof window !== "undefined" &&
-    !!window.matchMedia?.("(max-width: 720px)").matches;
 
   useEffect(() => {
     if (runtime.current?.content) {
@@ -518,7 +515,7 @@ function CollectionExperience({ collection }) {
               key={active.id}
               cards={active.scene.cards}
               registry={arCards}
-              compact={compact}
+              compact
               hidden={!active}
               onOpen={setOpenCard}
             />
@@ -602,7 +599,8 @@ function CollectionExperience({ collection }) {
             <p>
               Hold your phone steady over any printed marker image in good
               lighting. Point at the marker illustration (not the QR code) to
-              see its 3D model and lesson boxes.
+              see its 3D model. Tap a coloured lesson icon to read, listen,
+              watch or open its link.
             </p>
             <button onClick={() => setTips(false)}>
               Got it <Check size={15} />
@@ -680,7 +678,7 @@ function CollectionExperience({ collection }) {
             showActions
             grid={false}
             cards={selected.scene.cards || []}
-            compactCards={compact}
+            compactCards
             onOpenCard={setOpenCard}
             onSoundError={() => setSoundError("A sound could not play.")}
           />
