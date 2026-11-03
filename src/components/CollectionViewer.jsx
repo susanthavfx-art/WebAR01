@@ -18,6 +18,7 @@ import StudioCanvas from "./StudioCanvas";
 import { IconButton, Logo } from "./UI";
 import { CardOverlay, LessonCardSheet, positionCards } from "./LessonCards";
 import { ActionBar } from "./ModelActions";
+import JoystickDock from "./MovementJoystick";
 import {
   addLights,
   applyObjectTransform,
@@ -30,6 +31,7 @@ import {
   playAction,
   setIdleClip,
   stopAllSounds,
+  updateJoystickMovement,
   validIdleClip,
 } from "../lib/model-actions";
 import { loadCollectionFromLocation } from "../lib/workspace";
@@ -148,6 +150,13 @@ function CollectionExperience({ collection }) {
     });
   }
 
+  function moveCurrent(objectId, input) {
+    const state = runtime.current;
+    if (!state) return;
+    state.joystickObjectId = objectId;
+    state.joystickInput = input || { x: 0, y: 0 };
+  }
+
   const playRef = useRef(playCurrent);
   playRef.current = playCurrent;
 
@@ -165,6 +174,8 @@ function CollectionExperience({ collection }) {
       loadedId: null,
       content: null,
       anchor: null,
+      joystickObjectId: null,
+      joystickInput: { x: 0, y: 0 },
     };
     runtime.current = state;
 
@@ -252,6 +263,8 @@ function CollectionExperience({ collection }) {
         state.content = group;
         state.anchor = anchor;
         state.loadedId = card.id;
+        state.joystickObjectId = null;
+        state.joystickInput = { x: 0, y: 0 };
 
         card.scene.objects.forEach((object) => {
           const model = createAsset(object.assetId, object.color, object.model);
@@ -369,6 +382,8 @@ function CollectionExperience({ collection }) {
           anchor.onTargetLost = () => {
             if (disposed || state.activeId !== card.id) return;
             state.activeId = null;
+            state.joystickObjectId = null;
+            state.joystickInput = { x: 0, y: 0 };
             setActiveId(null);
             stopAllSounds();
             setLooping({});
@@ -417,8 +432,19 @@ function CollectionExperience({ collection }) {
             card.scene.objects.forEach((object, i) => {
               const model = group.children[i];
               if (!model) return;
+              const motion = updateJoystickMovement(
+                model,
+                object,
+                state.joystickObjectId === object.id
+                  ? state.joystickInput
+                  : null,
+                mindar.camera,
+                delta,
+              );
               if (model.visible) tickModel(model, delta);
               const fx = actionOffsets(model, now / 1000);
+              model.position.x = motion ? motion.x : object.position[0];
+              model.position.z = motion ? motion.z : object.position[2];
               model.position.y =
                 object.position[1] +
                 (object.animation === "float"
@@ -427,6 +453,7 @@ function CollectionExperience({ collection }) {
                 fx.y * object.scale;
               model.rotation.y =
                 (object.rotation[1] * Math.PI) / 180 +
+                (motion?.heading || 0) +
                 (object.animation === "spin" ? t * 0.28 : 0) +
                 fx.rot;
               model.rotation.z =
@@ -613,12 +640,19 @@ function CollectionExperience({ collection }) {
           </div>
         )}
         {ready && active && (
-          <ActionBar
-            className="ar-action-bar"
-            objects={active.scene.objects}
-            looping={looping}
-            onPlay={playCurrent}
-          />
+          <>
+            <ActionBar
+              className="ar-action-bar"
+              objects={active.scene.objects}
+              looping={looping}
+              onPlay={playCurrent}
+            />
+            <JoystickDock
+              className="ar-joystick"
+              objects={active.scene.objects}
+              onChange={moveCurrent}
+            />
+          </>
         )}
         <div className="ar-bottom">
           <span className="ar-privacy">

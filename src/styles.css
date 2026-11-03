@@ -7652,6 +7652,204 @@ textarea.text-input {
   font-size: 10px;
   line-height: 1.4;
 }
+.joystick-section select.text-input {
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+.joystick-section .add-joystick {
+  min-height: 40px;
+}
+.joystick-speed-label {
+  margin-top: 2px;
+}
+.joystick-speed-word {
+  flex: none;
+  font-size: 9px;
+  color: #857c93;
+}
+.joystick-editor-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 12px;
+}
+.joystick-editor-note svg {
+  flex: none;
+  margin-top: 2px;
+}
+.joystick-remove {
+  margin-top: 10px;
+  color: #a15f6b;
+}
+
+/* Touch movement pad shared by Studio previews and published AR. */
+.joystick-dock {
+  position: absolute;
+  left: 16px;
+  bottom: 18px;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.studio-canvas:has(.action-bar) .joystick-dock {
+  bottom: 82px;
+}
+.joystick-model {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 150px;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid #ffffffa8;
+  border-radius: 999px;
+  background: #30243fc9;
+  backdrop-filter: blur(10px);
+  color: #fff;
+  box-shadow: 0 3px 12px #281a3a22;
+  font-size: 10px;
+  font-weight: 700;
+}
+.joystick-model > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.joystick-model select {
+  width: 116px;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: #fff;
+  color: #3f3351;
+  border-radius: 999px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.joystick-pad {
+  position: relative;
+  width: 118px;
+  height: 118px;
+  flex: none;
+  padding: 0;
+  border: 1px solid #ffffffa8;
+  border-radius: 50%;
+  background: #30243f6b;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 8px 26px #20122f38,
+    inset 0 0 0 1px #ffffff12;
+  touch-action: none;
+  cursor: grab;
+  overflow: hidden;
+}
+.joystick-pad:active {
+  cursor: grabbing;
+}
+.joystick-pad.active {
+  border-color: #ffffffe6;
+  background: #4d386d80;
+}
+.joystick-pad:focus-visible {
+  outline: 3px solid #b8a1f0;
+  outline-offset: 3px;
+}
+.joystick-ring {
+  position: absolute;
+  inset: 20px;
+  border: 1px dashed #ffffff66;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.joystick-ring::before,
+.joystick-ring::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #ffffff30;
+  transform: translate(-50%, -50%);
+}
+.joystick-ring::before {
+  width: 116%;
+  height: 1px;
+}
+.joystick-ring::after {
+  width: 1px;
+  height: 116%;
+}
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffffffe8;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #9479e2, #6b4ebc);
+  color: #fff;
+  box-shadow: 0 5px 15px #1d102e55;
+  pointer-events: none;
+  will-change: transform;
+}
+.joystick-caption {
+  align-self: center;
+  color: #fff;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+  text-shadow: 0 1px 5px #251633b8;
+  pointer-events: none;
+}
+.ar-experience .joystick-dock {
+  z-index: 9;
+  left: 18px;
+  bottom: calc(158px + env(safe-area-inset-bottom));
+}
+@media (max-width: 600px) {
+  .joystick-dock {
+    left: 12px;
+    bottom: 14px;
+  }
+  .studio-canvas:has(.action-bar) .joystick-dock {
+    bottom: 76px;
+  }
+  .joystick-pad {
+    width: 108px;
+    height: 108px;
+  }
+  .joystick-knob {
+    width: 46px;
+    height: 46px;
+  }
+  .ar-experience .joystick-dock {
+    left: 14px;
+    bottom: calc(154px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .joystick-pad {
+    width: 92px;
+    height: 92px;
+  }
+  .joystick-knob {
+    width: 40px;
+    height: 40px;
+  }
+  .joystick-ring {
+    inset: 16px;
+  }
+  .ar-experience .joystick-dock {
+    bottom: calc(140px + env(safe-area-inset-bottom));
+  }
+}
 
 .action-bar {
   position: absolute;

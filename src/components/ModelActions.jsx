@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Clapperboard,
+  Gamepad2,
   Play,
   Plus,
   Repeat,
@@ -13,8 +14,12 @@ import { modelClipNames } from "../lib/model-library";
 import {
   ACTION_LABEL_LIMIT,
   EFFECTS,
+  JOYSTICK_DEFAULT_SPEED,
+  JOYSTICK_MAX_SPEED,
+  JOYSTICK_MIN_SPEED,
   MAX_ACTIONS,
   blankAction,
+  blankJoystick,
   effectName,
   isEffect,
 } from "../lib/model-actions";
@@ -98,6 +103,110 @@ function parseMovement(value) {
   return isEffect(value) ? value : null;
 }
 
+function JoystickEditor({ object, update, isGlb, names, loading }) {
+  const joystick = object.joystick;
+  return (
+    <section className="property-section joystick-section">
+      <div className="property-section-heading">
+        <h3>
+          <Gamepad2 size={14} />
+          Movement joystick
+        </h3>
+        <span className="tiny-pill">{joystick ? "ADDED" : "OPTIONAL"}</span>
+      </div>
+      <p className="actions-hint">
+        {isGlb && loading
+          ? "Reading this model’s animations…"
+          : isGlb && names.length
+            ? "Move the model in Preview and published AR with an on-screen touch joystick."
+            : "Add an uploaded GLB with a Walk, Run or other animation clip to use a joystick."}
+      </p>
+      {joystick ? (
+        <>
+          <label className="field-label" htmlFor={`joystick-clip-${object.id}`}>
+            WALK / RUN ANIMATION
+          </label>
+          <select
+            id={`joystick-clip-${object.id}`}
+            className="text-input"
+            value={joystick.clip}
+            onChange={(event) =>
+              update({
+                joystick: { ...joystick, clip: Number(event.target.value) },
+              })
+            }
+          >
+            {names.map((name, index) => (
+              <option key={index} value={index}>
+                {name}
+              </option>
+            ))}
+            {joystick.clip >= names.length && (
+              <option value={joystick.clip}>
+                {loading
+                  ? "Loading…"
+                  : `Animation ${joystick.clip + 1} (missing)`}
+              </option>
+            )}
+          </select>
+          <div className="scale-label joystick-speed-label">
+            <label
+              className="field-label"
+              htmlFor={`joystick-speed-${object.id}`}
+            >
+              MOVE SPEED
+            </label>
+            <span>
+              {(joystick.speed || JOYSTICK_DEFAULT_SPEED).toFixed(1)}×
+            </span>
+          </div>
+          <div className="scale-slider">
+            <span className="joystick-speed-word">Slow</span>
+            <input
+              id={`joystick-speed-${object.id}`}
+              aria-label="Joystick movement speed"
+              type="range"
+              min={JOYSTICK_MIN_SPEED}
+              max={JOYSTICK_MAX_SPEED}
+              step="0.1"
+              value={joystick.speed || JOYSTICK_DEFAULT_SPEED}
+              onChange={(event) =>
+                update({
+                  joystick: { ...joystick, speed: Number(event.target.value) },
+                })
+              }
+            />
+            <span className="joystick-speed-word">Fast</span>
+          </div>
+          <p className="animation-hint joystick-editor-note">
+            <Gamepad2 size={11} />
+            Drag the pad to walk in any direction. Release it to return to the
+            main animation.
+          </p>
+          <button
+            type="button"
+            className="button secondary full joystick-remove"
+            onClick={() => update({ joystick: undefined })}
+          >
+            <Trash2 size={14} />
+            Remove joystick
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          className="button secondary full add-joystick"
+          disabled={!isGlb || loading || !names.length}
+          onClick={() => update({ joystick: blankJoystick(names) })}
+        >
+          <Gamepad2 size={15} />
+          Add joystick
+        </button>
+      )}
+    </section>
+  );
+}
+
 export function ActionEditor({ object, update, onTest, notify }) {
   const { asset, names, loading } = useClipNames(object);
   const actions = object.actions || [];
@@ -126,187 +235,196 @@ export function ActionEditor({ object, update, onTest, notify }) {
   }
 
   return (
-    <section className="property-section actions-section">
-      <div className="property-section-heading">
-        <h3>
-          <Clapperboard size={14} />
-          Play buttons
-        </h3>
-        <span className="tiny-pill">
-          {actions.length}/{MAX_ACTIONS}
-        </span>
-      </div>
-      {isGlb && names.length > 0 && (
-        <>
-          <label className="field-label" htmlFor="idle-clip">
-            MAIN ANIMATION (PLAYS ALL THE TIME)
-          </label>
-          <select
-            id="idle-clip"
-            className="text-input"
-            value={
-              object.idleClip === undefined ? "auto" : String(object.idleClip)
-            }
-            onChange={(e) => {
-              const v = e.target.value;
-              update({ idleClip: v === "auto" ? undefined : Number(v) });
-            }}
-          >
-            <option value="auto">
-              Automatic ({asset.model.animate ? names[0] : "stand still"})
-            </option>
-            {names.map((n, i) => (
-              <option key={i} value={i}>
-                {n}
-              </option>
-            ))}
-            <option value="-1">Stand still</option>
-          </select>
-        </>
-      )}
-      <p className="actions-hint">
-        {isGlb && loading
-          ? "Reading this model’s animations…"
-          : isGlb && names.length > 1
-            ? `This model has ${names.length} animations. Give each one its own button, and add a sound if you like.`
-            : isGlb && names.length === 1
-              ? "This model has 1 animation. Add buttons for it, simple movements or sounds."
-              : "Add buttons that make this object jump, spin or play a sound (an animal call, a voice…)."}
-      </p>
-      {actions.map((a, i) => {
-        const n = i + 1;
-        return (
-          <div className="action-card" key={a.id}>
-            <div className="action-card-head">
-              <span className="action-number">{n}</span>
-              <input
-                className="text-input"
-                aria-label={`Play button ${n} name`}
-                value={a.label}
-                maxLength={ACTION_LABEL_LIMIT}
-                placeholder="Button name"
-                onChange={(e) =>
-                  patch(i, {
-                    label: e.target.value.slice(0, ACTION_LABEL_LIMIT),
-                  })
-                }
-              />
-              <button
-                type="button"
-                className="action-icon-button"
-                aria-label={`Test play button ${n}`}
-                title="Test"
-                onClick={() => onTest(a)}
-              >
-                <Play size={14} />
-              </button>
-              <button
-                type="button"
-                className="action-icon-button danger"
-                aria-label={`Remove play button ${n}`}
-                title="Remove"
-                onClick={() => setActions(actions.filter((_, j) => j !== i))}
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-            <label className="field-label" htmlFor={`action-move-${a.id}`}>
-              MOVEMENT
+    <>
+      <JoystickEditor
+        object={object}
+        update={update}
+        isGlb={isGlb}
+        names={names}
+        loading={loading}
+      />
+      <section className="property-section actions-section">
+        <div className="property-section-heading">
+          <h3>
+            <Clapperboard size={14} />
+            Play buttons
+          </h3>
+          <span className="tiny-pill">
+            {actions.length}/{MAX_ACTIONS}
+          </span>
+        </div>
+        {isGlb && names.length > 0 && (
+          <>
+            <label className="field-label" htmlFor="idle-clip">
+              MAIN ANIMATION (PLAYS ALL THE TIME)
             </label>
             <select
-              id={`action-move-${a.id}`}
+              id="idle-clip"
               className="text-input"
-              aria-label={`Play button ${n} movement`}
-              value={movementValue(a.clip)}
+              value={
+                object.idleClip === undefined ? "auto" : String(object.idleClip)
+              }
               onChange={(e) => {
-                const clip = parseMovement(e.target.value);
-                const old = movementLabel(a.clip);
-                const label =
-                  !a.label || a.label === old || a.label === "Sound"
-                    ? (clip === null ? "Sound" : movementLabel(clip)).slice(
-                        0,
-                        ACTION_LABEL_LIMIT,
-                      )
-                    : a.label;
-                patch(i, { clip, label });
+                const v = e.target.value;
+                update({ idleClip: v === "auto" ? undefined : Number(v) });
               }}
             >
-              {names.length > 0 && (
-                <optgroup label="Model animations">
-                  {names.map((name, c) => (
-                    <option key={c} value={`clip:${c}`}>
-                      {name}
+              <option value="auto">
+                Automatic ({asset.model.animate ? names[0] : "stand still"})
+              </option>
+              {names.map((n, i) => (
+                <option key={i} value={i}>
+                  {n}
+                </option>
+              ))}
+              <option value="-1">Stand still</option>
+            </select>
+          </>
+        )}
+        <p className="actions-hint">
+          {isGlb && loading
+            ? "Reading this model’s animations…"
+            : isGlb && names.length > 1
+              ? `This model has ${names.length} animations. Give each one its own button, and add a sound if you like.`
+              : isGlb && names.length === 1
+                ? "This model has 1 animation. Add buttons for it, simple movements or sounds."
+                : "Add buttons that make this object jump, spin or play a sound (an animal call, a voice…)."}
+        </p>
+        {actions.map((a, i) => {
+          const n = i + 1;
+          return (
+            <div className="action-card" key={a.id}>
+              <div className="action-card-head">
+                <span className="action-number">{n}</span>
+                <input
+                  className="text-input"
+                  aria-label={`Play button ${n} name`}
+                  value={a.label}
+                  maxLength={ACTION_LABEL_LIMIT}
+                  placeholder="Button name"
+                  onChange={(e) =>
+                    patch(i, {
+                      label: e.target.value.slice(0, ACTION_LABEL_LIMIT),
+                    })
+                  }
+                />
+                <button
+                  type="button"
+                  className="action-icon-button"
+                  aria-label={`Test play button ${n}`}
+                  title="Test"
+                  onClick={() => onTest(a)}
+                >
+                  <Play size={14} />
+                </button>
+                <button
+                  type="button"
+                  className="action-icon-button danger"
+                  aria-label={`Remove play button ${n}`}
+                  title="Remove"
+                  onClick={() => setActions(actions.filter((_, j) => j !== i))}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <label className="field-label" htmlFor={`action-move-${a.id}`}>
+                MOVEMENT
+              </label>
+              <select
+                id={`action-move-${a.id}`}
+                className="text-input"
+                aria-label={`Play button ${n} movement`}
+                value={movementValue(a.clip)}
+                onChange={(e) => {
+                  const clip = parseMovement(e.target.value);
+                  const old = movementLabel(a.clip);
+                  const label =
+                    !a.label || a.label === old || a.label === "Sound"
+                      ? (clip === null ? "Sound" : movementLabel(clip)).slice(
+                          0,
+                          ACTION_LABEL_LIMIT,
+                        )
+                      : a.label;
+                  patch(i, { clip, label });
+                }}
+              >
+                {names.length > 0 && (
+                  <optgroup label="Model animations">
+                    {names.map((name, c) => (
+                      <option key={c} value={`clip:${c}`}>
+                        {name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {typeof a.clip === "number" && a.clip >= names.length && (
+                  <option value={`clip:${a.clip}`}>
+                    {loading ? "Loading…" : `Animation ${a.clip + 1} (missing)`}
+                  </option>
+                )}
+                <optgroup label="Simple movements">
+                  {EFFECTS.map((fx) => (
+                    <option key={fx.id} value={fx.id}>
+                      {fx.name}
                     </option>
                   ))}
                 </optgroup>
+                {a.sound?.url && (
+                  <option value="none">No movement – sound only</option>
+                )}
+              </select>
+              {typeof a.clip === "number" && (
+                <label className="action-check">
+                  <input
+                    type="checkbox"
+                    aria-label={`Play button ${n} keeps playing`}
+                    checked={!!a.loop}
+                    onChange={(e) => patch(i, { loop: e.target.checked })}
+                  />
+                  <Repeat size={13} />
+                  Keep playing until tapped again
+                </label>
               )}
-              {typeof a.clip === "number" && a.clip >= names.length && (
-                <option value={`clip:${a.clip}`}>
-                  {loading ? "Loading…" : `Animation ${a.clip + 1} (missing)`}
-                </option>
-              )}
-              <optgroup label="Simple movements">
-                {EFFECTS.map((fx) => (
-                  <option key={fx.id} value={fx.id}>
-                    {fx.name}
-                  </option>
-                ))}
-              </optgroup>
-              {a.sound?.url && (
-                <option value="none">No movement – sound only</option>
-              )}
-            </select>
-            {typeof a.clip === "number" && (
-              <label className="action-check">
-                <input
-                  type="checkbox"
-                  aria-label={`Play button ${n} keeps playing`}
-                  checked={!!a.loop}
-                  onChange={(e) => patch(i, { loop: e.target.checked })}
-                />
-                <Repeat size={13} />
-                Keep playing until tapped again
-              </label>
-            )}
-            <MediaField
-              kind="audio"
-              media={a.sound}
-              title="Sound (optional)"
-              previewLabel={`Play button ${n} sound preview`}
-              doneMessage="Sound added to your play button."
-              note="Plays when tapped in 3D or AR."
-              onChange={(sound) => patch(i, { sound })}
-              notify={notify}
-            />
-          </div>
-        );
-      })}
-      {actions.length < MAX_ACTIONS && (
-        <button
-          type="button"
-          className="button secondary full add-action"
-          onClick={() =>
-            setActions([
-              ...actions,
-              blankAction(
-                names,
-                actions
-                  .map((a) => a.clip)
-                  .filter((c) => typeof c === "number"),
-              ),
-            ])
-          }
-        >
-          <Plus size={15} />
-          Add play button
-        </button>
-      )}
-      {actions.length > 0 && (
-        <p className="animation-hint">
-          <Play size={10} />
-          These buttons appear in 3D and AR. Tapping the model plays button 1.
-        </p>
-      )}
-    </section>
+              <MediaField
+                kind="audio"
+                media={a.sound}
+                title="Sound (optional)"
+                previewLabel={`Play button ${n} sound preview`}
+                doneMessage="Sound added to your play button."
+                note="Plays when tapped in 3D or AR."
+                onChange={(sound) => patch(i, { sound })}
+                notify={notify}
+              />
+            </div>
+          );
+        })}
+        {actions.length < MAX_ACTIONS && (
+          <button
+            type="button"
+            className="button secondary full add-action"
+            onClick={() =>
+              setActions([
+                ...actions,
+                blankAction(
+                  names,
+                  actions
+                    .map((a) => a.clip)
+                    .filter((c) => typeof c === "number"),
+                ),
+              ])
+            }
+          >
+            <Plus size={15} />
+            Add play button
+          </button>
+        )}
+        {actions.length > 0 && (
+          <p className="animation-hint">
+            <Play size={10} />
+            These buttons appear in 3D and AR. Tapping the model plays button 1.
+          </p>
+        )}
+      </section>
+    </>
   );
 }

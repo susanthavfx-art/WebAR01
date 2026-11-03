@@ -258,6 +258,7 @@ export function SceneObjects({
                   {o.actions?.length
                     ? ` · ${o.actions.length} play button${o.actions.length === 1 ? "" : "s"}`
                     : ""}
+                  {o.joystick ? " · Joystick" : ""}
                 </small>
               </span>
             </button>
