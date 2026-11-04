@@ -341,10 +341,17 @@ export async function uploadPublication({
     fileCount: list.length,
     sizeBytes: totalBytes,
     manifestUrl: `${info.base}${folder}/manifest.json`,
-    dashboardUrl: `${info.projectUrl}/project/${projectRef(
-      info.projectUrl,
-    )}/storage/buckets/${info.bucket}?path=${encodeURIComponent(folder)}`,
+    dashboardUrl: dashboardFolderUrl(info, folder),
   };
+}
+
+export function dashboardFolderUrl(info, folder = info?.folder || "") {
+  const ref = projectRef(info?.projectUrl);
+  const bucket = info?.bucket || "";
+  if (!ref) return "https://supabase.com/dashboard/projects";
+  return `https://supabase.com/dashboard/project/${ref}/storage/buckets/${bucket}?path=${encodeURIComponent(
+    folder,
+  )}`;
 }
 
 function projectRef(projectUrl) {
