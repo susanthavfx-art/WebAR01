@@ -41,6 +41,8 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: "${{ steps.pages.outputs.base_path }}/"
+          VITE_VISITOR_ACCOUNTS: "${{ vars.VITE_VISITOR_ACCOUNTS }}"
+          VITE_VISITOR_FORM_URL: "${{ vars.VITE_VISITOR_FORM_URL || 'https://script.google.com/macros/s/AKfycbxhH-83pMD8WICaMZEayYY9M8JHZLLOuEEAkz8WCnlxzWW_65zEOn2kwW6rRKU1psOa6g/exec' }}"
 
       - name: Disable Jekyll processing
         run: touch site/.nojekyll
