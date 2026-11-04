@@ -44,6 +44,8 @@ import { currentPage } from "./lib/deployment";
 import ShapesLibrary from "./components/ShapesLibrary";
 import StudioCanvas from "./components/StudioCanvas";
 import CollectionViewer from "./components/CollectionViewer";
+import VisitorGate from "./components/VisitorGate";
+import SheetVisitorGate from "./components/SheetVisitorGate";
 import PublishModal from "./components/PublishModal";
 import AssetImage from "./components/AssetImage";
 import { ObjectProperties, SceneObjects } from "./components/SceneProperties";
@@ -91,7 +93,16 @@ export default function App() {
   }, []);
 
   if (currentPage() === "collection") {
-    return <CollectionViewer key={location} />;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    // Draft camera previews stay local. Turn on the gate only after the account
+    // backend is configured; existing public bundles are not paywalled.
+    const gate = params.get("draft") !== "1" && (import.meta.env.VITE_VISITOR_ACCOUNTS === "true" || params.get("visitor") === "1");
+    const viewer = <CollectionViewer key={location} />;
+    const formUrl = import.meta.env.VITE_VISITOR_FORM_URL;
+    if (params.get("draft") !== "1" && formUrl) {
+      return <SheetVisitorGate key={location} formUrl={formUrl} params={params}>{viewer}</SheetVisitorGate>;
+    }
+    return gate ? <VisitorGate key={location}>{viewer}</VisitorGate> : viewer;
   }
   return <CreateStudio />;
 }
@@ -1828,7 +1839,7 @@ function CreateStudio() {
         </span>
         <span>
           <ShieldCheck size={12} />
-          <span>No login. One QR for all your models.</span>
+          <span>One QR for all your models.</span>
         </span>
         <button type="button" onClick={() => setDialog("help")}>
           A little help?

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <style>
+    [hidden] { display:none !important } * { box-sizing:border-box } body { margin:0; font-family:Arial,sans-serif; color:#342c43; background:#f7f4ff; padding:24px 16px; }
+    .card { max-width:460px; margin:auto; background:#fff; border:1px solid #eee9f6; border-radius:24px; padding:28px; box-shadow:0 18px 55px #5c46861a; }
+    .brand { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0edf5; padding-bottom:20px; margin-bottom:25px; }
+    .brand b { font-size:21px; letter-spacing:-1px; color:#7052bd } .brand span { font-size:9px; letter-spacing:.12em; color:#ad9fbb; font-weight:bold }
+    .icon { background:#f2ecff; color:#795bd0; width:45px; height:45px; border-radius:15px; display:grid; place-items:center; font-size:24px; }
+    .eyebrow { color:#957ad5; font-size:10px; font-weight:bold; letter-spacing:.14em; margin-top:19px }
+    h1 { font-size:27px; line-height:1.2; letter-spacing:-.04em; margin:8px 0 10px } p { color:#82778f; line-height:1.6; font-size:14px; margin:0 0 22px }
+    form { display:grid; gap:15px } label.field { display:grid; gap:7px; font-size:12px; font-weight:bold; color:#574b61 } input.text { border:1px solid #e6dfed; border-radius:10px; height:46px; padding:0 13px; font:inherit; font-size:14px; width:100%; background:#fcfbfe }
+    small { font-weight:normal; color:#948a9c; line-height:1.4 } .check { display:flex; gap:10px; align-items:flex-start; background:#f8f5ff; padding:12px; border-radius:10px; font-size:12px; line-height:1.5; color:#645a6e } .check input { accent-color:#795bd0; margin:3px 0 0; flex:none }
+    button, .continue { display:flex; justify-content:center; align-items:center; width:100%; min-height:48px; border:0; background:#795bd0; color:white; font-weight:bold; font-size:14px; border-radius:11px; cursor:pointer; text-decoration:none } button:disabled { opacity:.6 }
+    .message { color:#a53d50; font-size:12px; margin:0 } .footer { border-top:1px solid #f0edf5; text-align:center; margin-top:25px; padding-top:18px; color:#b4a9bf; font-weight:bold; font-size:9px; letter-spacing:.1em }
+  </style>
+</head>
+<body><main class="card">
+  <div class="brand"><b>✦ wonderlab</b><span>THE WORLD OF WONDER</span></div>
+  <div class="icon">✦</div><div class="eyebrow">A LITTLE MAGIC AWAITS</div>
+  <h1>Welcome to WonderLab.</h1><p>Before we open your AR camera, tell us a little about yourself. A parent or guardian should complete this form for a child.</p>
+  <form id="form">
+    <label class="field">Your name<input class="text" name="name" autocomplete="name" required maxlength="100" placeholder="Your full name"></label>
+    <label class="field">Job or role<input class="text" name="job" required maxlength="100" placeholder="e.g. parent, teacher, designer"></label>
+    <label class="field">WhatsApp number<input class="text" name="whatsapp" type="tel" autocomplete="tel" required maxlength="25" placeholder="077 123 4567 or +94 77 123 4567"><small>Include the country code if outside Sri Lanka. This number is not verified.</small></label>
+    <label class="check"><input type="checkbox" name="adult" required><span>I am an adult (18 or over) and I am providing my own details.</span></label>
+    <label class="check"><input type="checkbox" name="marketing"><span>I'd like to receive WonderLab product news and promotions on WhatsApp. This is optional. Contact WonderLab to withdraw consent.</span></label>
+    <p style="font-size:11px;margin:0">Your details and the AR set opened are saved to WonderLab's Google Sheet. Contact wonderlab.app@gmail.com to request changes or deletion.</p>
+    <p class="message" role="alert" id="error"></p>
+    <button id="submit" type="submit">Save &amp; open AR camera →</button>
+  </form>
+  <div id="success" hidden><p>You're all set! Your details were saved.</p><a id="continue" class="continue" target="_top">Open AR camera →</a><p style="font-size:11px;margin:12px 0 0">If the camera doesn't open automatically, tap the button above.</p></div>
+  <div class="footer">MADE FOR CURIOUS LITTLE MINDS</div>
+</main>
+<script>
+  const publicationId = <?!= JSON.stringify(publicationId) ?>;
+  const state = <?!= JSON.stringify(state) ?>;
+  const camera = <?!= JSON.stringify(camera) ?>;
+  const form = document.getElementById('form');
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const submit = document.getElementById('submit');
+    const error = document.getElementById('error');
+    submit.disabled = true; submit.textContent = 'Saving…'; error.textContent = '';
+    const input = { publicationId, state, camera, name: form.elements.name.value, job: form.elements.job.value, whatsapp: form.elements.whatsapp.value, adult: form.elements.adult.checked, marketing: form.elements.marketing.checked };
+    google.script.run.withSuccessHandler(function(url) {
+      form.hidden = true; document.getElementById('success').hidden = false;
+      document.getElementById('continue').href = url;
+      try { window.top.location.href = url; } catch (_) { /* Use the visible button if navigation is blocked. */ }
+    }).withFailureHandler(function() {
+      error.textContent = 'Could not save your details. Please check your connection and try again.';
+      submit.disabled = false; submit.textContent = 'Save & open AR camera →';
+    }).submitVisitor(input);
+  });
+</script></body></html>
