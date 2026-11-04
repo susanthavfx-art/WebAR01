@@ -10625,3 +10625,181 @@ textarea.text-input {
   color: #8d7ea2;
   word-break: break-word;
 }
+
+/* ---------- Supabase publishing ---------- */
+.flash-cloud {
+  margin: 0 0 16px;
+  border: 1px solid #e2ecdf;
+  border-radius: 11px;
+  background: #f7fbf5;
+  padding: 13px 15px;
+}
+.flash-cloud.is-off {
+  border-color: #efe6d6;
+  background: #fffcf5;
+}
+.flash-cloud-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.flash-cloud-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 31px;
+  height: 31px;
+  border-radius: 9px;
+  color: #6f9864;
+  background: #eaf4e6;
+}
+.flash-cloud.is-off .flash-cloud-icon {
+  color: #a98b54;
+  background: #f8efdd;
+}
+.flash-cloud-head > div {
+  flex: 1;
+  min-width: 0;
+}
+.flash-cloud-head strong {
+  display: block;
+  color: #5b6d54;
+  font-size: 11.5px;
+}
+.flash-cloud.is-off .flash-cloud-head strong {
+  color: #8a7146;
+}
+.flash-cloud-head p {
+  margin: 3px 0 0;
+  color: #8a9b82;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.flash-cloud.is-off .flash-cloud-head p {
+  color: #a08f74;
+}
+.flash-cloud-head code,
+.flash-cloud-form code,
+.flash-cloud-note code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #eef4ea;
+  color: #607a58;
+  font-size: 9.5px;
+}
+.flash-cloud-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid #dfe9db;
+  border-radius: 999px;
+  background: #fff;
+  color: #71916a;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.flash-cloud-toggle:hover {
+  background: #f2f8ef;
+}
+.flash-cloud-form {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #dfe9db;
+}
+.flash-cloud-form label {
+  display: block;
+  margin-bottom: 5px;
+  color: #8d7b9a;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+}
+.flash-cloud-form .text-input {
+  width: 100%;
+  margin-bottom: 9px;
+  font-size: 10px;
+}
+.flash-cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 3px;
+}
+.flash-cloud-actions .button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 10px;
+}
+.flash-cloud-note {
+  margin: 9px 0 0;
+  color: #9b9078;
+  font-size: 9.5px;
+  line-height: 1.55;
+}
+.flash-cloud-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 0;
+  color: #6f9864;
+  font-size: 10px;
+  font-weight: 600;
+}
+.flash-cloud-saved {
+  margin-top: 12px;
+  padding: 12px 15px;
+  border: 1px solid #dbe9d6;
+  border-radius: 10px;
+  background: #f4faf1;
+}
+.flash-cloud-saved-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #5b6d54;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.flash-cloud-saved > code {
+  display: block;
+  margin: 6px 0 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #e2ecdf;
+  color: #6b8563;
+  font-size: 9.5px;
+  overflow-wrap: anywhere;
+}
+.flash-cloud-saved-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.flash-cloud-saved-actions button,
+.flash-cloud-saved-actions a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  color: #71916a;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.flash-generate-progress {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+@media (max-width: 720px) {
+  .flash-cloud-head {
+    flex-wrap: wrap;
+  }
+  .flash-cloud-toggle {
+    margin-left: 41px;
+  }
+}

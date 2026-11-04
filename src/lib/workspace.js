@@ -8,8 +8,16 @@ import {
   localRecord,
   resolveResourceUrl,
   safeResourceReference,
+  setPublishedBase,
 } from "./local-files";
 import { downloadBlob, newScene, slug, validateScene } from "./projects";
+import {
+  fetchPublishedManifest,
+  isSupabaseConfigured,
+  loadSupabaseSettings,
+  storageInfo,
+  uploadPublication,
+} from "./supabase";
 
 export const WORKSPACE_KEY = "wonderlab.webar01.workspace.v1";
 export const SCENES_KEY = "wonderlab.webar01.scenes.v1";
@@ -514,6 +522,7 @@ export async function createWorkspacePublication(
   scenes,
   base,
   onProgress = () => {},
+  options = {},
 ) {
   const issues = workspaceProblems(workspace, scenes);
   if (issues.length) throw new Error(issues[0]);
@@ -609,9 +618,20 @@ export async function createWorkspacePublication(
     target,
     cards,
   };
-  files[`public/published/${id}/manifest.json`] = textBytes(
-    JSON.stringify(manifest, null, 2),
-  );
+  const manifestPath = `public/published/${id}/manifest.json`;
+  files[manifestPath] = textBytes(JSON.stringify(manifest, null, 2));
+
+  // Supabase mode: the very same bundle is uploaded into a brand new folder
+  // (published/<id>/) so the QR works without touching GitHub. The manifest
+  // saved there also carries the storage base so relative "published/..."
+  // paths resolve to the bucket instead of the website.
+  const settings = options.settings || loadSupabaseSettings();
+  const wantCloud = options.uploadToCloud !== false;
+  const cloudEnabled = wantCloud && isSupabaseConfigured(settings);
+  let cloudManifest = null;
+  if (cloudEnabled) {
+    cloudManifest = { ...manifest, storage: storageInfo(settings, id) };
+  }
 
   onProgress("Generating single QR code & printable PDF…");
   const qrLink = collectionUrl(publicBase, id, { cameraDirect: true });
@@ -649,7 +669,31 @@ export async function createWorkspacePublication(
   const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
   const qrBlob = new Blob([qrBytes], { type: "image/png" });
   const filename = `${slug(workspace.title)}-publish.zip`;
-  downloadBlob(zipBlob, filename);
+  if (options.downloadZip !== false) downloadBlob(zipBlob, filename);
+
+  let cloud = null;
+  let cloudError = "";
+  if (cloudEnabled) {
+    try {
+      const cloudFiles = {
+        ...files,
+        [manifestPath]: textBytes(JSON.stringify(cloudManifest, null, 2)),
+      };
+      cloud = await uploadPublication({
+        publicationId: id,
+        files: cloudFiles,
+        title: workspace.title,
+        cardCount: workspace.entries.length,
+        settings,
+        onProgress,
+      });
+    } catch (error) {
+      cloudError =
+        error?.message ||
+        "The AR bundle could not be saved to Supabase. Use the ZIP instead.";
+    }
+    onProgress("");
+  }
 
   return {
     id,
@@ -661,6 +705,30 @@ export async function createWorkspacePublication(
     qrDataUrl,
     publicBase,
     cardCount: workspace.entries.length,
+    cloud,
+    cloudError,
+    cloudSkipped: wantCloud && !cloudEnabled,
+  };
+}
+
+// Optional cloud descriptor stored inside a manifest when the bundle was
+// uploaded to Supabase Storage instead of (or as well as) GitHub Pages.
+function validateStorage(input) {
+  if (!input || typeof input !== "object") return null;
+  const base = safeResourceReference(input.base);
+  if (!base || base !== String(input.base) || !base.endsWith("/")) return null;
+  if (!/^https:\/\//i.test(base)) return null;
+  return {
+    provider: "supabase",
+    base,
+    ...(typeof input.bucket === "string" &&
+    /^[a-z0-9._-]{2,64}$/i.test(input.bucket)
+      ? { bucket: input.bucket }
+      : {}),
+    ...(typeof input.folder === "string" &&
+    input.folder.startsWith("published/")
+      ? { folder: input.folder.slice(0, 200) }
+      : {}),
   };
 }
 
@@ -678,11 +746,12 @@ function validateCollection(input, publicationId) {
       "This published AR project is invalid or uses an unsupported format.",
     );
   }
+  const storage = validateStorage(input.storage);
   const expectedPrefix = `published/${publicationId}/files/`;
   const ownFile = (value) =>
     typeof value === "string" &&
     value.startsWith(expectedPrefix) &&
-    safeResourceReference(value);
+    safeResourceReference(value) === value;
   if (!ownFile(input.target)) {
     throw new Error("The combined .mind tracking file is missing.");
   }
@@ -717,7 +786,30 @@ function validateCollection(input, publicationId) {
     mode: "shared",
     target: input.target,
     cards,
+    ...(storage ? { storage } : {}),
   };
+}
+
+// A publication can live next to the app (GitHub Pages) or in Supabase
+// Storage. The website copy is tried first so older QR links keep working.
+async function readPublishedManifest(id, settings) {
+  try {
+    const response = await fetch(publicUrl(`published/${id}/manifest.json`), {
+      cache: "no-cache",
+    });
+    const type = response.headers.get("content-type") || "";
+    if (response.ok && !type.includes("text/html")) {
+      const text = await response.text();
+      if (text.length <= 2_000_000) return { text, from: "site" };
+    }
+  } catch {
+    /* Fall through to Supabase Storage. */
+  }
+  if (isSupabaseConfigured(settings)) {
+    const text = await fetchPublishedManifest(id, settings);
+    if (text) return { text, from: "supabase" };
+  }
+  return null;
 }
 
 export async function loadCollectionFromLocation() {
@@ -727,6 +819,7 @@ export async function loadCollectionFromLocation() {
   let collection;
 
   if (isDraft) {
+    setPublishedBase("");
     const { workspace, scenes } = loadWorkspaceState();
     const issues = workspaceProblems(workspace, scenes);
     if (issues.length) throw new Error(issues[0]);
@@ -758,22 +851,15 @@ export async function loadCollectionFromLocation() {
         "This QR link is incomplete. Generate a fresh QR from Publish & share.",
       );
     }
-    const response = await fetch(publicUrl(`published/${id}/manifest.json`), {
-      cache: "no-cache",
-    });
-    if (
-      !response.ok ||
-      (response.headers.get("content-type") || "").includes("text/html")
-    ) {
+    const manifest = await readPublishedManifest(id, loadSupabaseSettings());
+    if (!manifest) {
       throw new Error(
-        "This published set is not online at this URL yet. Upload the extracted 'public' folder from your publish ZIP to your GitHub repository and wait for GitHub Pages to finish deploying.",
+        "This published set is not online yet. Publish it again from Publish & share — it is saved to Supabase automatically — or upload the extracted 'public' folder from your ZIP to GitHub.",
       );
     }
-    const text = await response.text();
-    if (text.length > 2_000_000) {
-      throw new Error("This published manifest is too large to open.");
-    }
-    collection = validateCollection(JSON.parse(text), id);
+    collection = validateCollection(JSON.parse(manifest.text), id);
+    if (collection.storage?.base) setPublishedBase(collection.storage.base);
+    else setPublishedBase("");
   }
 
   if (!resolveResourceUrl(collection.target)) {

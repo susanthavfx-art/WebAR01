@@ -89,16 +89,37 @@ export function safeResourceReference(value) {
     return "";
   }
 }
+// A published bundle normally lives next to the app (GitHub Pages), but it can
+// also be served from Supabase Storage. When a collection declares a remote
+// storage base, every "published/..." reference resolves against that base.
+let publishedBase = "";
+
+export function setPublishedBase(base) {
+  const value = String(base || "");
+  publishedBase = /^https:\/\//i.test(value)
+    ? value.endsWith("/")
+      ? value
+      : `${value}/`
+    : "";
+  return publishedBase;
+}
+
+export const getPublishedBase = () => publishedBase;
+
+function publishedUrl(path) {
+  return publishedBase ? `${publishedBase}${path}` : publicUrl(path);
+}
+
 export function resolveResourceUrl(value) {
   const id = localId(value);
   if (id) return urls.get(id) || "";
-  if (PUBLISHED.test(String(value || ""))) return publicUrl(value);
+  if (PUBLISHED.test(String(value || ""))) return publishedUrl(value);
   return safeResourceReference(value);
 }
 export function resolveModelFile(value) {
   const id = localModelId(value);
   if (id) return urls.get(id) || "";
-  if (PUBLISHED.test(String(value || ""))) return publicUrl(value);
+  if (PUBLISHED.test(String(value || ""))) return publishedUrl(value);
   return "";
 }
 export function localRecord(value) {

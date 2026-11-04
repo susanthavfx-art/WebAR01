@@ -1994,11 +1994,12 @@ function CreateStudio() {
             </li>
             <li>
               <strong>5. Publish &amp; share — Single QR Code:</strong> Click{" "}
-              <strong>Publish &amp; share</strong> to generate one QR code and
-              download the publish ZIP. Extract and drag the{" "}
-              <code>public</code> folder into your GitHub repository — scanning
-              that one QR opens the AR camera directly and recognizes all your
-              markers!
+              <strong>Publish &amp; share</strong> and the whole bundle is
+              saved into a <strong>new Supabase folder</strong>{" "}
+              (<code>ar-published/published/&lt;new-id&gt;/</code>) while one QR
+              code is generated. Scanning that QR opens the AR camera directly
+              and recognizes all your markers — no GitHub upload needed. The ZIP
+              stays available as a backup.
             </li>
           </ol>
           <button
