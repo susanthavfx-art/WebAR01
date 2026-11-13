@@ -1,3 +1,4 @@
+import { validateVideo } from "./video-object";
 import { validateKeyframes } from "./timeline";
 import { getAsset, hasAsset, registerSharedModel } from "./assets";
 import { validateCards } from "./lesson-cards";
@@ -70,7 +71,7 @@ export function validateScene(input) {
 
   const ids = new Set();
   const objects = candidates
-    .filter((o) => hasAsset(o.assetId))
+    .filter((o) => hasAsset(o.assetId) && (o.assetId !== "media:video" || validateVideo(o.video)))
     .map((o) => {
       let id =
         typeof o.id === "string" && o.id.length < 80
@@ -84,6 +85,7 @@ export function validateScene(input) {
         id,
         assetId: o.assetId,
         ...(asset.model ? { model: asset.model } : {}),
+        ...(o.assetId === "media:video" ? { video: validateVideo(o.video) } : {}),
         name:
           typeof o.name === "string" && o.name.trim()
             ? o.name.slice(0, 35)

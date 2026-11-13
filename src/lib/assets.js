@@ -1,3 +1,4 @@
+import { createVideoObject } from "./video-object";
 import * as THREE from "three";
 import { createGLBModel, modelAsset } from "./model-library";
 import { disposeActions } from "./model-actions";
@@ -10,6 +11,7 @@ const sharedModels = new Map();
 // resolves an asset id (studio canvas, Lesson boxes, published AR viewer) can
 // show either kind without special cases.
 SHAPE_ASSETS.forEach((asset) => sharedModels.set(asset.id, asset));
+sharedModels.set("media:video", { id: "media:video", name: "Video", category: "WebM", bg: "#f0ebff", color: "#ffffff", kind: "video" });
 
 const FALLBACK_ASSET = {
   id: "placeholder",
@@ -55,7 +57,8 @@ export const getAsset = (id, definition) => {
   return findAsset(id) || FALLBACK_ASSET;
 };
 
-export function createAsset(id, tint, definition) {
+export function createAsset(id, tint, definition, video) {
+  if (id === "media:video" && video) return createVideoObject(video);
   const asset = getAsset(id, definition);
   if (asset.kind === "glb") return createGLBModel(asset, tint);
   if (asset.kind === "shape") return createShape(asset.shape, tint);
@@ -107,6 +110,15 @@ export function applyObjectTransform(group, object) {
 }
 
 export function disposeGroup(group) {
+  group.traverse((node) => {
+    if (node.userData.video) {
+      node.userData.cancelVideoLoad?.();
+      node.userData.video.pause();
+      node.userData.video.removeAttribute("src");
+      node.userData.video.load();
+      node.userData.videoTexture?.dispose();
+    }
+  });
   disposeActions(group);
   group.traverse((o) => {
     o.userData.disposed = true;

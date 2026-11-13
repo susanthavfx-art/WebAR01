@@ -558,7 +558,8 @@ const StudioCanvas = forwardRef(function StudioCanvas(
       wasPlaying = p.playing;
       let acting = false;
       for (const m of models.values()) if (isActing(m.group)) acting = true;
-      if (!needsRender && !p.playing && !e.dragging && !e.cardDrag && !acting) {
+      const videoPlaying = [...models.values()].some(m => m.group.userData.video && m.group.visible);
+      if (!needsRender && !p.playing && !e.dragging && !e.cardDrag && !acting && !videoPlaying) {
         return;
       }
       if ((p.playing || acting) && !e.dragging) {
@@ -678,7 +679,7 @@ const StudioCanvas = forwardRef(function StudioCanvas(
     }
     for (const object of project.objects) {
       let m = e.models.get(object.id);
-      const key = `${object.assetId}-${object.color || ""}-${JSON.stringify(object.model || null)}`;
+      const key = `${object.assetId}-${object.color || ""}-${JSON.stringify(object.model || null)}-${JSON.stringify(object.video || null)}`;
       if (m && m.key !== key) {
         e.transform.detach();
         e.scene.remove(m.group);
@@ -689,7 +690,7 @@ const StudioCanvas = forwardRef(function StudioCanvas(
       if (!m) {
         m = {
           key,
-          group: createAsset(object.assetId, object.color, object.model),
+          group: createAsset(object.assetId, object.color, object.model, object.video),
         };
         e.models.set(object.id, m);
         e.scene.add(m.group);
