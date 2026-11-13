@@ -10895,3 +10895,12 @@ textarea.text-input {
 .group-error { color: #ab3852; font-size: 11px; margin: 0 0 10px; }
 .webm-upload-btn { margin-top: 8px; cursor: pointer; }
 .webm-upload-hint { margin: 6px 2px 8px; font-size: 10px; line-height: 1.45; color: #887b96; }
+
+.video-sound-controls { position: absolute; z-index: 20; right: 16px; bottom: 16px; max-width: min(270px, 70%); max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+.video-sound-controls button { display: flex; align-items: center; gap: 7px; max-width: 100%; border: 1px solid #ded4ec; border-radius: 9px; background: #fffefaed; color: #604682; padding: 8px 10px; font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 12px #3f2c571c; }
+.video-sound-controls button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.video-sound-controls button svg { flex-shrink: 0; }
+.video-sound-controls button:disabled { opacity: .65; }
+.ar-video-sound-controls { top: calc(90px + env(safe-area-inset-top)); bottom: auto; right: 14px; }
+.ar-video-sound-controls button { background: #30283ce8; color: white; border-color: #ffffff55; }
+.video-sound-error { color: #aa354c; background: #fff8f5; border-radius: 7px; font-size: 11px; line-height: 1.4; padding: 7px; }

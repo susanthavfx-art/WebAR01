@@ -1151,7 +1151,7 @@ function CreateStudio() {
                   <span>{busyKind === "video" ? "Loading WebM…" : "Add transparent WebM"}</span>
                   <input type="file" className="visually-hidden" aria-label="Add transparent WebM" accept=".webm,video/webm" disabled={!!busyKind} onChange={addWebM} />
                 </label>
-                <p className="webm-upload-hint">Muted, looping WebM (max 20 MB). Export with alpha; transparency and playback vary by browser.</p>
+                <p className="webm-upload-hint">Looping WebM (max 20 MB). Tap Play sound on the canvas for audio. Export with alpha; browser support varies.</p>
                 <button
                   type="button"
                   className="button secondary full blank-scene-button"
@@ -1596,8 +1596,8 @@ function CreateStudio() {
               markerImage={activeMarkerImage}
               playing={playing}
               showActions={playing}
-              onSoundError={() =>
-                notify("This sound could not play. Check the audio file.", "error")
+              onSoundError={(message) =>
+                notify(typeof message === "string" ? message : "This sound could not play. Check the audio file.", "error")
               }
               cards={cards}
               cardMode="edit"
