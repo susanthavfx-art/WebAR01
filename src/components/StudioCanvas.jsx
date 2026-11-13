@@ -28,6 +28,7 @@ import {
 import { CardOverlay, positionCards } from "./LessonCards";
 import { ActionBar } from "./ModelActions";
 import JoystickDock from "./MovementJoystick";
+import VideoSoundControls from "./VideoSoundControls";
 
 const StudioCanvas = forwardRef(function StudioCanvas(
   {
@@ -779,6 +780,12 @@ const StudioCanvas = forwardRef(function StudioCanvas(
       className={`studio-canvas ${pickMode ? "picking-point" : ""}`}
       data-testid="studio-canvas"
     >
+      <VideoSoundControls
+        key={project.id}
+        objects={project.objects}
+        getVideo={(id) => engine.current?.models.get(id)?.group.userData.video}
+        onError={(message) => onSoundError?.(message)}
+      />
       <CardOverlay
         cards={cards}
         registry={cardRegistry}

@@ -20,6 +20,7 @@ import { IconButton, Logo } from "./UI";
 import { CardOverlay, LessonCardSheet, positionCards } from "./LessonCards";
 import { ActionBar } from "./ModelActions";
 import JoystickDock from "./MovementJoystick";
+import VideoSoundControls from "./VideoSoundControls";
 import {
   addLights,
   applyObjectTransform,
@@ -383,7 +384,9 @@ function CollectionExperience({ collection }) {
           anchor.onTargetFound = () => activate(card, anchor);
           anchor.onTargetLost = () => {
             if (disposed || state.activeId !== card.id) return;
-            state.content?.children.forEach((model) => model.userData.video?.pause());
+            state.content?.children.forEach((model) => {
+              if (model.userData.video) { model.userData.video.muted = true; model.userData.video.pause(); }
+            });
             state.activeId = null;
             state.joystickObjectId = null;
             state.joystickInput = { x: 0, y: 0 };
@@ -646,6 +649,16 @@ function CollectionExperience({ collection }) {
         )}
         {ready && active && (
           <>
+            <VideoSoundControls
+              key={active.id}
+              className="ar-video-sound-controls"
+              objects={active.scene.objects}
+              getVideo={(id) => {
+                const index = active.scene.objects.findIndex(object => object.id === id);
+                return runtime.current?.content?.children[index]?.userData.video;
+              }}
+              onError={setSoundError}
+            />
             <ActionBar
               className="ar-action-bar"
               objects={active.scene.objects}
