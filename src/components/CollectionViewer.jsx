@@ -1,3 +1,4 @@
+import { sampleKeyframes } from "../lib/timeline";
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -443,22 +444,24 @@ function CollectionExperience({ collection }) {
               );
               if (model.visible) tickModel(model, delta);
               const fx = actionOffsets(model, now / 1000);
-              model.position.x = motion ? motion.x : object.position[0];
-              model.position.z = motion ? motion.z : object.position[2];
+              const pose = sampleKeyframes(object.keyframes, t) || object;
+              model.position.x = motion ? motion.x : pose.position[0];
+              model.position.z = motion ? motion.z : pose.position[2];
               model.position.y =
-                object.position[1] +
+                pose.position[1] +
                 (object.animation === "float"
                   ? Math.sin(t * 1.6 + i) * 0.12
                   : 0) +
-                fx.y * object.scale;
+                fx.y * pose.scale;
+              model.rotation.x = (pose.rotation[0] * Math.PI) / 180;
               model.rotation.y =
-                (object.rotation[1] * Math.PI) / 180 +
+                (pose.rotation[1] * Math.PI) / 180 +
                 (motion?.heading || 0) +
                 (object.animation === "spin" ? t * 0.28 : 0) +
                 fx.rot;
               model.rotation.z =
-                (object.rotation[2] * Math.PI) / 180 + fx.tilt;
-              model.scale.setScalar(object.scale * fx.scale);
+                (pose.rotation[2] * Math.PI) / 180 + fx.tilt;
+              model.scale.setScalar(pose.scale * fx.scale);
             });
 
             if (card.scene.cards?.length && state.anchor?.group.visible) {

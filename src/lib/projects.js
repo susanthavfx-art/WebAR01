@@ -1,3 +1,4 @@
+import { validateKeyframes } from "./timeline";
 import { getAsset, hasAsset, registerSharedModel } from "./assets";
 import { validateCards } from "./lesson-cards";
 import {
@@ -95,6 +96,7 @@ export function validateScene(input) {
         animation: ["none", "float", "spin"].includes(o.animation)
           ? o.animation
           : "none",
+        keyframes: validateKeyframes(o.keyframes),
         visible: o.visible !== false,
         ...(typeof o.color === "string" && /^#[0-9a-f]{6}$/i.test(o.color)
           ? { color: o.color }

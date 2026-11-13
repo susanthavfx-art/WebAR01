@@ -1,3 +1,4 @@
+import { sampleKeyframes } from "../lib/timeline";
 import React, {
   forwardRef,
   useEffect,
@@ -542,6 +543,8 @@ const StudioCanvas = forwardRef(function StudioCanvas(
     let frame;
     let lastFrame = 0;
     const start = performance.now();
+    let playbackStart = start;
+    let wasPlaying = false;
     const loop = () => {
       frame = requestAnimationFrame(loop);
       const now = performance.now();
@@ -551,6 +554,8 @@ const StudioCanvas = forwardRef(function StudioCanvas(
       const t = (now - start) / 1000;
       controls.update();
       const p = props.current;
+      if (p.playing && !wasPlaying) playbackStart = now;
+      wasPlaying = p.playing;
       let acting = false;
       for (const m of models.values()) if (isActing(m.group)) acting = true;
       if (!needsRender && !p.playing && !e.dragging && !e.cardDrag && !acting) {
@@ -569,21 +574,23 @@ const StudioCanvas = forwardRef(function StudioCanvas(
           );
           if (m.visible) tickModel(m, delta);
           const fx = actionOffsets(m, now / 1000);
-          m.position.x = motion ? motion.x : o.position[0];
-          m.position.z = motion ? motion.z : o.position[2];
+          const pose = (p.playing && sampleKeyframes(o.keyframes, (now - playbackStart) / 1000)) || o;
+          m.position.x = motion ? motion.x : pose.position[0];
+          m.position.z = motion ? motion.z : pose.position[2];
           m.position.y =
-            o.position[1] +
+            pose.position[1] +
             (p.playing && o.animation === "float"
               ? Math.sin(t * 1.6 + i) * 0.12
               : 0) +
-            fx.y * o.scale;
+            fx.y * pose.scale;
+          m.rotation.x = (pose.rotation[0] * Math.PI) / 180;
           m.rotation.y =
-            (o.rotation[1] * Math.PI) / 180 +
+            (pose.rotation[1] * Math.PI) / 180 +
             (motion?.heading || 0) +
             (p.playing && o.animation === "spin" ? t * 0.28 : 0) +
             fx.rot;
-          m.rotation.z = (o.rotation[2] * Math.PI) / 180 + fx.tilt;
-          m.scale.setScalar(o.scale * fx.scale);
+          m.rotation.z = (pose.rotation[2] * Math.PI) / 180 + fx.tilt;
+          m.scale.setScalar(pose.scale * fx.scale);
         });
       }
       if (selection.visible && p.selectedId) {
