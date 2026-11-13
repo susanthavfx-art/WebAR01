@@ -370,8 +370,8 @@ function CreateStudio() {
     return { entry, scene, state: next };
   }
 
-  function addShape(shapeId) {
-    const shape = findShape(shapeId);
+  function addShape(shapeId, model) {
+    const shape = model ? registerSharedModel(model) : findShape(shapeId);
     if (!shape) return;
     const current = stateRef.current;
     let entry = getActiveEntry(current);
@@ -404,6 +404,7 @@ function CreateStudio() {
       shape.id,
       [Math.cos(angle) * ring, 0, Math.sin(angle) * ring],
       1,
+      model ? { model: shape.model } : {},
     );
 
     const history = getHistory(entry.sceneId);
@@ -1277,6 +1278,15 @@ function CreateStudio() {
           ) : libraryTab === "shapes" ? (
             <ShapesLibrary
               onAdd={addShape}
+              uploadedModels={state.workspace.entries.filter((entry) => entry.model?.id).map((entry) => ({
+                id: `upload-${entry.model.id}`,
+                name: entry.title,
+                category: "GLB Model",
+                file: `uploads/${entry.model.id}.glb`,
+                height: 1.5,
+                rotation: [0, 0, 0],
+                animate: true,
+              }))}
               count={project.objects.length}
             />
           ) : (
