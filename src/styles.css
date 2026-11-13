@@ -10836,3 +10836,14 @@ textarea.text-input {
 .visitor-footer { margin-top: 29px; padding-top: 18px; border-top: 1px solid #f0edf5; display: flex; justify-content: center; align-items: center; gap: 6px; color: #bab0c3; letter-spacing: .1em; font-size: 9px; font-weight: 800; }
 .visitor-manage { position: fixed; z-index: 100; top: 12px; right: 12px; background: white; color: #684eb7; border: 1px solid #e9e1f4; border-radius: 999px; padding: 9px 13px; display: flex; gap: 6px; align-items: center; box-shadow: 0 3px 12px #31234b20; font-weight: 700; font-size: 12px; }
 @media (max-width: 520px) { .visitor-shell { align-items: start; padding: 16px 12px; } .visitor-card { padding: 24px 22px 20px; border-radius: 20px; } .visitor-brand { margin-bottom: 22px; } .visitor-grid { grid-template-columns: 1fr 1fr; } }
+
+.timeline-section .animation-hint { line-height: 1.5; margin-bottom: 12px; }
+.timeline-controls { display: flex; align-items: end; gap: 8px; }
+.timeline-controls label { display: grid; gap: 5px; font-size: 11px; font-weight: 700; flex: 1; }
+.timeline-controls input { width: 100%; min-width: 0; padding: 8px; border: 1px solid #dedee8; border-radius: 8px; }
+.timeline-controls button, .timeline-key-list button { border: 1px solid #dedee8; background: #fff; border-radius: 8px; padding: 8px; cursor: pointer; color: #5b45b4; font-size: 11px; font-weight: 700; }
+.timeline-controls button:disabled { opacity: .5; cursor: default; }
+.timeline-range { width: 100%; margin: 14px 0 8px; accent-color: #7658dc; }
+.timeline-key-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.timeline-key-list > div { display: flex; gap: 2px; }
+.timeline-key-list small { color: #858394; line-height: 1.5; }

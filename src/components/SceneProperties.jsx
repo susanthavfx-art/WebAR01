@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { sampleKeyframes } from "../lib/timeline";
 import {
   ArrowUpRight,
   Box,
@@ -33,6 +34,18 @@ export function ObjectProperties({
   notify,
 }) {
   const a = getAsset(object.assetId, object.model);
+  const [time, setTime] = useState(0);
+  const keys = object.keyframes || [];
+  const duration = Math.max(5, keys.at(-1)?.time || 0, time);
+  function seek(value) {
+    setTime(value);
+    const pose = sampleKeyframes(keys, value, false);
+    if (pose) update({ position: pose.position, rotation: pose.rotation, scale: pose.scale });
+  }
+  function addKey() {
+    const key = { time, position: [...object.position], rotation: [...object.rotation], scale: object.scale };
+    update({ keyframes: [...keys.filter(k => k.time !== time), key].sort((a, b) => a.time - b.time) });
+  }
 
   function vector(field, i, value) {
     if (value === "") return;
@@ -203,6 +216,16 @@ export function ObjectProperties({
           <Play size={10} />
           Hit play below your canvas to see the magic.
         </p>
+      </section>
+      <section className="property-section timeline-section">
+        <div className="property-section-heading"><h3><span>◆</span> Animation timeline</h3><span className="tiny-pill">KEYFRAMES</span></div>
+        <p className="animation-hint">Set a time, adjust the transform, then save a keyframe. Press play below the canvas to preview the loop.</p>
+        <div className="timeline-controls">
+          <label>Time (seconds)<input aria-label="Keyframe time in seconds" type="number" min="0" max="300" step="0.1" value={time} onChange={e => setTime(Math.round(Math.max(0, Math.min(300, Number(e.target.value) || 0)) * 100) / 100)} /></label>
+          <button type="button" onClick={addKey} disabled={keys.length >= 100 && !keys.some(k => k.time === time)}>◆ Save keyframe</button>
+        </div>
+        <input className="timeline-range" aria-label="Scrub animation timeline" type="range" min="0" max={duration} step="0.01" value={time} onChange={e => seek(Number(e.target.value))} />
+        <div className="timeline-key-list">{keys.length ? keys.map(key => <div key={key.time}><button type="button" onClick={() => seek(key.time)}>◆ {key.time.toFixed(2)}s</button><button type="button" aria-label={`Delete keyframe at ${key.time} seconds`} onClick={() => update({ keyframes: keys.filter(k => k.time !== key.time) })}><Trash2 size={13} /></button></div>) : <small>No keyframes yet. Save at least two poses to animate.</small>}</div>
       </section>
       <ActionEditor
         object={object}
