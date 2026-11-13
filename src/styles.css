@@ -10837,13 +10837,44 @@ textarea.text-input {
 .visitor-manage { position: fixed; z-index: 100; top: 12px; right: 12px; background: white; color: #684eb7; border: 1px solid #e9e1f4; border-radius: 999px; padding: 9px 13px; display: flex; gap: 6px; align-items: center; box-shadow: 0 3px 12px #31234b20; font-weight: 700; font-size: 12px; }
 @media (max-width: 520px) { .visitor-shell { align-items: start; padding: 16px 12px; } .visitor-card { padding: 24px 22px 20px; border-radius: 20px; } .visitor-brand { margin-bottom: 22px; } .visitor-grid { grid-template-columns: 1fr 1fr; } }
 
-.timeline-section .animation-hint { line-height: 1.5; margin-bottom: 12px; }
-.timeline-controls { display: flex; align-items: end; gap: 8px; }
-.timeline-controls label { display: grid; gap: 5px; font-size: 11px; font-weight: 700; flex: 1; }
-.timeline-controls input { width: 100%; min-width: 0; padding: 8px; border: 1px solid #dedee8; border-radius: 8px; }
-.timeline-controls button, .timeline-key-list button { border: 1px solid #dedee8; background: #fff; border-radius: 8px; padding: 8px; cursor: pointer; color: #5b45b4; font-size: 11px; font-weight: 700; }
-.timeline-controls button:disabled { opacity: .5; cursor: default; }
-.timeline-range { width: 100%; margin: 14px 0 8px; accent-color: #7658dc; }
-.timeline-key-list { display: flex; gap: 6px; flex-wrap: wrap; }
-.timeline-key-list > div { display: flex; gap: 2px; }
-.timeline-key-list small { color: #858394; line-height: 1.5; }
+
+/* The keyframe editor lives directly beneath the 3D canvas. */
+.animation-timeline {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 12px 20px 10px;
+  background: #fff;
+  border-top: 1px solid #e9e1f0;
+  color: #51445f;
+}
+.timeline-header, .timeline-actions, .timeline-title { display: flex; align-items: center; gap: 10px; }
+.timeline-header { justify-content: space-between; gap: 12px; }
+.timeline-title { min-width: 0; flex-wrap: wrap; }
+.timeline-title strong { font-size: 12px; white-space: nowrap; color: #5b4490; }
+.timeline-title span { color: #92869d; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.timeline-actions { flex-shrink: 0; }
+.timeline-actions label { font-size: 11px; color: #80738c; white-space: nowrap; }
+.timeline-actions input { width: 64px; margin-left: 4px; padding: 6px; border: 1px solid #e3dbea; border-radius: 6px; color: #51445f; }
+.timeline-actions button, .timeline-key-list button { border: 1px solid #e3dbea; background: #fff; border-radius: 6px; padding: 6px 9px; color: #634b99; font-size: 11px; font-weight: 700; cursor: pointer; }
+.timeline-actions .timeline-play { display: inline-flex; align-items: center; justify-content: center; height: 30px; width: 30px; padding: 0; }
+.timeline-actions .timeline-save { background: #7054aa; color: white; border-color: #7054aa; white-space: nowrap; }
+.animation-timeline button:disabled, .animation-timeline input:disabled { opacity: .48; cursor: not-allowed; }
+.timeline-track-area { margin: 9px 8px 0; }
+.timeline-ruler { display: flex; justify-content: space-between; color: #a095aa; font-size: 10px; }
+.timeline-track { height: 27px; position: relative; display: flex; align-items: center; }
+.timeline-track input { width: 100%; margin: 0; accent-color: #7658bd; cursor: pointer; }
+.timeline-marker { position: absolute; top: 0; transform: translateX(-50%); border: 0; padding: 0 3px; background: transparent; color: #7658bd; cursor: pointer; font-size: 14px; line-height: 15px; z-index: 2; }
+.timeline-playhead { position: absolute; top: 14px; height: 12px; width: 2px; background: #553888; pointer-events: none; }
+.timeline-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; color: #92869d; font-size: 10px; line-height: 1.4; }
+.timeline-key-list { display: flex; gap: 4px; overflow-x: auto; max-width: 48%; flex-shrink: 0; }
+.timeline-key-list > span { display: inline-flex; white-space: nowrap; }
+.timeline-key-list button { padding: 3px 5px; border-radius: 4px; }
+@media (max-width: 600px) {
+  .animation-timeline { padding: 9px 12px; }
+  .timeline-header { align-items: flex-start; flex-wrap: wrap; gap: 6px; }
+  .timeline-title { width: 100%; }
+  .timeline-actions { width: 100%; justify-content: space-between; }
+  .timeline-track-area { margin-top: 5px; }
+  .timeline-footer { align-items: flex-start; flex-direction: column; }
+  .timeline-key-list { max-width: 100%; width: 100%; }
+}

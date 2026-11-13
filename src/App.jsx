@@ -43,6 +43,7 @@ import {
 import { currentPage } from "./lib/deployment";
 import ShapesLibrary from "./components/ShapesLibrary";
 import StudioCanvas from "./components/StudioCanvas";
+import AnimationTimeline from "./components/AnimationTimeline";
 import CollectionViewer from "./components/CollectionViewer";
 import VisitorGate from "./components/VisitorGate";
 import SheetVisitorGate from "./components/SheetVisitorGate";
@@ -1637,6 +1638,14 @@ function CreateStudio() {
               {modelEntries.length === 1 ? "model in set" : "models in set"}
             </span>
           </div>
+
+          <AnimationTimeline
+            key={selectedObject?.id || "none"}
+            object={selectedObject}
+            playing={playing}
+            onPlay={() => { setPlaying(!playing); setTool("select"); }}
+            update={(patch) => selectedObject && updateObject(selectedObject.id, patch)}
+          />
 
           <div className="canvas-bottom">
             <div className="canvas-tip">
