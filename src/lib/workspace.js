@@ -204,7 +204,7 @@ export function entryStatus(entry, scenes) {
   const modelReady = !!(
     scene?.objects?.length &&
     scene.objects.every(
-      (o) => !localModelId(o.model?.file) || !!localRecord(o.model.file),
+      (o) => (!localModelId(o.model?.file) || !!localRecord(o.model.file)) && (!isLocalReference(o.video?.url) || !!localRecord(o.video.url)),
     )
   );
   const markerReady = !!(entry?.marker && localRecord(entry.marker.ref));
@@ -243,7 +243,7 @@ export function workspaceProblems(workspace, scenes) {
     if (!status.modelReady) {
       issues.push(
         scene.objects.length
-          ? `${entry.title}: upload "${stem}.glb" in the Objects tab.`
+          ? `${entry.title}: an uploaded model or video is missing on this device.`
           : `${entry.title}: add a shape in the Shapes tab, or upload "${stem}.glb" in the Objects tab.`,
       );
     }
@@ -566,6 +566,7 @@ export async function createWorkspacePublication(
     const scene = sceneForEntry(entry, scenes);
     scene.objects.forEach((o) => {
       collect(o.model?.file);
+      collect(o.video?.url);
       (o.actions || []).forEach((action) => collect(action.sound?.url));
     });
     (scene.cards || []).forEach((c) => collect(c.media?.url));
@@ -590,6 +591,7 @@ export async function createWorkspacePublication(
       if (localModelId(object.model?.file)) {
         object.model.file = await include(object.model.file);
       }
+      if (isLocalReference(object.video?.url)) object.video.url = await include(object.video.url);
       for (const action of object.actions || []) {
         if (isLocalReference(action.sound?.url)) {
           action.sound.url = await include(action.sound.url);

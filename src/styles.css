@@ -10893,3 +10893,5 @@ textarea.text-input {
 .group-model-picker label { display: flex; align-items: center; gap: 6px; padding: 5px 0; color: #5b4c68; font-size: 11px; overflow-wrap: anywhere; }
 .group-model-picker input { accent-color: #7655b0; }
 .group-error { color: #ab3852; font-size: 11px; margin: 0 0 10px; }
+.webm-upload-btn { margin-top: 8px; cursor: pointer; }
+.webm-upload-hint { margin: 6px 2px 8px; font-size: 10px; line-height: 1.45; color: #887b96; }

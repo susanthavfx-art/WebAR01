@@ -268,7 +268,7 @@ function CollectionExperience({ collection }) {
         state.joystickInput = { x: 0, y: 0 };
 
         card.scene.objects.forEach((object) => {
-          const model = createAsset(object.assetId, object.color, object.model);
+          const model = createAsset(object.assetId, object.color, object.model, object.video);
           applyObjectTransform(model, object);
           setIdleClip(model, validIdleClip(object.idleClip));
           group.add(model);
@@ -291,6 +291,7 @@ function CollectionExperience({ collection }) {
         anchor.group.add(state.content);
         state.anchor = anchor;
       }
+      state.content?.children.forEach((model) => model.userData.video?.play().catch(() => {}));
       state.activeId = card.id;
       setActiveId(card.id);
     };
@@ -382,6 +383,7 @@ function CollectionExperience({ collection }) {
           anchor.onTargetFound = () => activate(card, anchor);
           anchor.onTargetLost = () => {
             if (disposed || state.activeId !== card.id) return;
+            state.content?.children.forEach((model) => model.userData.video?.pause());
             state.activeId = null;
             state.joystickObjectId = null;
             state.joystickInput = { x: 0, y: 0 };
