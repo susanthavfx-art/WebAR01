@@ -428,16 +428,16 @@ function CreateStudio() {
     notify(`${shape.name} added. Drag, resize or recolour it.`);
   }
 
-  async function addWebM(event) {
+  async function addWebM(event, packedAlpha = false) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!/\.webm$/i.test(file.name)) { notify("Choose a .webm video file.", "error"); return; }
-    if (!file.size || file.size > 20 * 1024 * 1024) { notify("Choose a non-empty WebM under 20 MB.", "error"); return; }
+    if (!(packedAlpha ? /\.mp4$/i : /\.webm$/i).test(file.name)) { notify(packedAlpha ? "Choose a packed alpha MP4 file." : "Choose a .webm video file.", "error"); return; }
+    if (!file.size || file.size > 20 * 1024 * 1024) { notify("Choose a non-empty video under 20 MB.", "error"); return; }
     const originalEntryId = getActiveEntry(stateRef.current)?.id || null;
     setBusyKind("video");
     try {
-      const aspect = await inspectWebM(file);
+      const aspect = await inspectWebM(file, packedAlpha);
       const record = await saveLocalFile(file, "video");
       let current = stateRef.current;
       if ((getActiveEntry(current)?.id || null) !== originalEntryId) throw new Error("The selected AR card changed. Please upload the video again.");
@@ -450,14 +450,14 @@ function CreateStudio() {
       }
       const scene = sceneForEntry(entry, current.scenes);
       if (!scene || scene.objects.length >= MAX_OBJECTS) throw new Error(`Keep each scene to ${MAX_OBJECTS} objects.`);
-      const object = sceneObject("media:video", [0, 0, 0], 1, { name: file.name.replace(/\.webm$/i, "").slice(0, 35) || "Video", video: { url: record.ref, aspect } });
+      const object = sceneObject("media:video", [0, 0, 0], 1, { name: file.name.replace(/\.(webm|mp4)$/i, "").slice(0, 35) || "Video", video: { url: record.ref, aspect, ...(packedAlpha ? { layout: "side-by-side-alpha" } : {}) } });
       const history = getHistory(entry.sceneId);
       history.past.push(clone(scene));
       if (history.past.length > 50) history.past.shift();
       history.future = [];
       replaceState({ ...current, scenes: current.scenes.map(item => item.id === scene.id ? { ...scene, objects: [...scene.objects, object], updatedAt: new Date().toISOString() } : item) });
       setSelectedId(object.id); setPickCardId(null); setInspectorTab("object");
-      notify("WebM added. Transparency depends on your browser and video codec.");
+      notify(packedAlpha ? "Alpha MP4 added. Test playback on your target phones." : "WebM added. Transparency depends on your browser and video codec.");
     } catch (error) { notify(error.message || "Could not add WebM video.", "error"); }
     finally { setBusyKind(""); }
   }
@@ -1149,8 +1149,14 @@ function CreateStudio() {
                 <label className={`button secondary full webm-upload-btn ${busyKind ? "disabled" : ""}`}>
                   {busyKind === "video" ? <LoaderCircle size={15} className="spin" /> : <Upload size={15} />}
                   <span>{busyKind === "video" ? "Loading WebM…" : "Add transparent WebM"}</span>
-                  <input type="file" className="visually-hidden" aria-label="Add transparent WebM" accept=".webm,video/webm" disabled={!!busyKind} onChange={addWebM} />
+                  <input type="file" className="visually-hidden" aria-label="Add transparent WebM" accept=".webm,video/webm" disabled={!!busyKind} onChange={(e) => addWebM(e)} />
                 </label>
+                <label className={`button secondary full webm-upload-btn ${busyKind ? "disabled" : ""}`}>
+                  <Upload size={15} />
+                  <span>Add alpha-packed MP4</span>
+                  <input type="file" className="visually-hidden" aria-label="Add alpha-packed MP4" accept=".mp4,video/mp4" disabled={!!busyKind} onChange={(e) => addWebM(e, true)} />
+                </label>
+                <p className="webm-upload-hint">Alpha-packed MP4: left half colour, right half grayscale alpha (white = visible). Use a converted file, not a normal MP4. Max 20 MB.</p>
                 <p className="webm-upload-hint">Looping WebM (max 20 MB). Tap Play sound on the canvas for audio. Export with alpha; browser support varies.</p>
                 <button
                   type="button"
