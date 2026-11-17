@@ -204,3 +204,15 @@ paywall.
 
 For the script's mocked validation and duplicate-save tests, run
 `node --test tests/sheet-visitor.test.mjs`.
+
+### Transparent video for iPhone and Android
+
+For better cross-device compatibility, the Objects toolbox has **Add alpha-packed MP4**. This expects an H.264 MP4 whose left half is the colour image and whose right half is the matching grayscale alpha mask (white is opaque, black transparent). The audio track can be AAC. Ordinary MP4 files do not have this layout and should not be uploaded using this button. The video is initially muted; tap **Play sound** to hear it.
+
+To convert an alpha-bearing **VP9 WebM** using a local FFmpeg build with libvpx, libx264 and AAC support:
+
+```sh
+scripts/pack-alpha-video.sh input-alpha.webm output-packed.mp4
+```
+
+The script scales each half to at most 960×540 and packs both halves into one MP4, preserving audio if present. Verify alpha was exported in the original file and keep the resulting upload under 20 MB. Upload the MP4 using **Add alpha-packed MP4**, remove the older WebM object, and publish again. Playback, codecs and WebGL still vary by device; test on the intended phones.

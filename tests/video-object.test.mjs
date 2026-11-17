@@ -13,6 +13,11 @@ test('video objects survive scene validation with safe local and published refer
     assert.equal(scene.objects[0].video.aspect, 1.5);
     object.video.url = `published/${id}/files/${id}.webm`;
     assert.equal(validateScene({ objects: [object] }).objects[0].video.url, object.video.url);
+    object.video.url = `published/${id}/files/${id}.mp4`;
+    object.video.layout = 'side-by-side-alpha';
+    assert.equal(validateScene({ objects: [object] }).objects[0].video.layout, 'side-by-side-alpha');
+    object.video.layout = 'unknown';
+    assert.equal(validateScene({ objects: [object] }).objects[0].video.layout, undefined);
     object.video.url = 'javascript:alert(1)';
     assert.equal(validateScene({ objects: [object] }).objects.length, 0);
   } finally { await vite.close(); }
